@@ -1,0 +1,43 @@
+trends:
+
+  - trend_id: "TR01"
+    category: "電動化"
+    trend: "EV/HEV化によるパワートレーン音の消失"
+    nv_implication: "エンジン音が消えることでロードノイズ・風切り音・モーター音が相対的に浮き上がる"
+    linked_product_value: ["V01", "V04"]
+    urgency: "高"
+
+  - trend_id: "TR02"
+    category: "上質化"
+    trend: "上級車における後席快適性・会話性の重要度上昇"
+    nv_implication: "後席のロードノイズ・低周波こもりが商品性評価の主戦場になる"
+    linked_product_value: ["V01", "V02"]
+    urgency: "高"
+
+  - trend_id: "TR03"
+    category: "軽量化"
+    trend: "航続距離・燃費改善のための車体軽量化要求"
+    nv_implication: "遮音材削減・ボディ板厚減少によりNVが悪化するリスク。遮音材追加だけで対応できない。"
+    linked_product_value: ["V01", "V02", "V03"]
+    urgency: "高"
+
+  - trend_id: "TR04"
+    category: "ユーザー感性"
+    trend: "静粛性だけでなく「音の上質さ」への期待上昇"
+    nv_implication: "dB値を下げるだけでは不十分。音質・官能評価との両立が必要。"
+    linked_product_value: ["V04", "V05"]
+    urgency: "中"
+
+  - trend_id: "TR05"
+    category: "タイヤ"
+    trend: "低転がり抵抗タイヤへの切り替え圧力"
+    nv_implication: "低転がり化とNV性能は競合する場合が多い。タイヤ選定がNVの重大変数になる。"
+    linked_product_value: ["V01", "V03", "V05"]
+    urgency: "高"
+
+  - trend_id: "TR06"
+    category: "競合"
+    trend: "競合他社の上級EV/HEVにおける静粛性レベルの急上昇"
+    nv_implication: "後席会話性・高速クルーズ時NVが差別化ポイントになっている"
+    linked_product_value: ["V01", "V02"]
+    urgency: "高"

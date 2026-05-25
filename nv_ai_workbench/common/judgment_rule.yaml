@@ -1,0 +1,86 @@
+# 判断ルール定義
+# 各判断軸に重みを設定し、課題の優先度ランキングに使用する
+# 重みは第一版の仮設定。重要なのは「どの軸を使ったか」が残ること。
+
+judgment_axes:
+  product_value_impact:
+    description: "上位商品性への影響度"
+    weight: 5
+    scoring_guide:
+      5: "主力商品性に直接影響し、顧客体験を大きく損なう"
+      4: "商品性に明確な影響あり"
+      3: "商品性に中程度の影響あり"
+      2: "商品性への影響は限定的"
+      1: "商品性への影響はほぼなし"
+
+  target_gap:
+    description: "目標値や狙いに対する未達度"
+    weight: 4
+    scoring_guide:
+      5: "目標比 +5dB超 または 目標未達が明確"
+      4: "目標比 +3〜5dB"
+      3: "目標比 +1〜3dB"
+      2: "目標比 ±1dB以内だが改善余地あり"
+      1: "目標達成済み"
+
+  subjective_consistency:
+    description: "測定結果と官能コメントの一致度"
+    weight: 4
+    scoring_guide:
+      5: "測定値悪化と官能コメントが完全一致"
+      4: "おおむね一致"
+      3: "部分的に一致"
+      2: "不一致（測定OK・官能NG、または測定NG・官能OK）"
+      1: "官能コメントなし"
+
+  recurrence_risk:
+    description: "過去事例や類似構造から見た再発リスク"
+    weight: 3
+    scoring_guide:
+      5: "同一構造で過去に重大問題あり"
+      4: "類似構造で問題事例あり"
+      3: "類似構造での問題事例が散見される"
+      2: "事例はあるが構造が異なる"
+      1: "事例なし"
+
+  uncertainty:
+    description: "原因の不確実性（高いほど追加検証が必要）"
+    weight: 3
+    scoring_guide:
+      5: "原因が全く特定できていない"
+      4: "複数要因が疑われる"
+      3: "主因は絞れているが確証なし"
+      2: "主因はほぼ特定、確認が必要"
+      1: "原因が明確"
+
+  schedule_impact:
+    description: "追加検証・対策による日程影響"
+    weight: 2
+    scoring_guide:
+      5: "量産日程に直接影響する"
+      4: "主要DR日程に影響する"
+      3: "中間評価に影響する"
+      2: "影響はあるが吸収可能"
+      1: "日程への影響なし"
+
+# 総合スコア = 各軸スコア × 重み の合計（最大 = 5×(5+4+4+3+3+2) = 105）
+
+ranking:
+  critical:
+    description: "最優先課題"
+    condition: "総合点60以上、または product_value_impact が5かつ subjective_consistency が4以上"
+  high:
+    description: "高優先課題"
+    condition: "総合点45以上"
+  medium:
+    description: "中優先課題"
+    condition: "総合点30以上"
+  low:
+    description: "低優先・監視継続"
+    condition: "総合点30未満"
+
+# 判断留意事項
+notes:
+  - "ランキングは機械的適用をしない。スコアを参考にエンジニアが最終判断する。"
+  - "官能コメントと測定値が不一致の場合は、どちらが顧客体験を代表しているか検討する。"
+  - "schedule_impact が高い場合は、確認を後回しにせず早期に対処する。"

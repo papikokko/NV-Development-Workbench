@@ -1,0 +1,39 @@
+product_concept:
+  concept_statement: "静かで上質、かつ軽快。EV/HEVクロスオーバーの新基準。"
+  target_customer: "40〜55歳、上質な移動体験を求め、環境意識も高いアッパーミドル層"
+
+product_values:
+  - value_id: "V01"
+    value: "後席でも会話しやすい"
+    description: "高速道路や粗粒路でも後席乗員が普通の声量で会話できる"
+    benchmark: "競合A車後席会話性評価をリファレンスとして同等以上"
+    nv_requirement_hint: ["ロードノイズ低減", "低周波こもり低減"]
+    linked_scene: ["S01", "S03", "S05"]
+
+  - value_id: "V02"
+    value: "長距離でも疲れにくい"
+    description: "3時間以上の連続走行でも乗員の疲労・頭痛を感じさせない"
+    benchmark: "官能評価疲労感スコアで現行車比改善"
+    nv_requirement_hint: ["低周波こもり低減", "ハーシュネス低減", "振動低減"]
+    linked_scene: ["S02", "S03", "S04"]
+
+  - value_id: "V03"
+    value: "荒れた路面でも上質に感じる"
+    description: "国内荒れ路・欧州石畳でも「安っぽい突き上げ感」を感じさせない"
+    benchmark: "ハーシュネス官能スコアで現行車比+1ランク"
+    nv_requirement_hint: ["ハーシュネス低減", "低周波こもり低減"]
+    linked_scene: ["S04", "S06"]
+
+  - value_id: "V04"
+    value: "EVらしく静かだが特定音が浮かない"
+    description: "モーター音・ギヤ音がロードノイズや風切り音に対して不自然に浮かない"
+    benchmark: "モーター音官能評価で「気になる」回答0%"
+    nv_requirement_hint: ["モーター音管理", "ギヤ音管理", "音バランス設計"]
+    linked_scene: ["S01", "S02", "S05"]
+
+  - value_id: "V05"
+    value: "軽快な走りと静粛性を両立する"
+    description: "NV対策による重量増・動特性への影響を最小化しつつ静粛性を確保"
+    benchmark: "NV対策起因の重量増を現行車比+20kg以内に抑制"
+    nv_requirement_hint: ["遮音材以外の対策主体化", "源流・経路対策優先"]
+    linked_scene: ["S01", "S02", "S05"]

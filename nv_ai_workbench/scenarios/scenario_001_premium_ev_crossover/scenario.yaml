@@ -1,0 +1,52 @@
+scenario_id: "scenario_001"
+scenario_name: "Premium EV/HEV Crossover NV Development"
+description: "次世代上級EV/HEVクロスオーバーにおける、静かで上質かつ軽快な走りを実現するNV開発シナリオ"
+version: "0.1"
+status: "mock"
+
+vehicle:
+  type: "上級クロスオーバーSUV"
+  powertrain: "EV/HEV"
+  segment: "Dセグメント"
+  target_market: "国内・北米・欧州"
+
+focus_area:
+  - "シャシー起因NV（ロードノイズ・低周波こもり・ハーシュネス）"
+  - "風切り音とのバランス"
+  - "モーター/ギヤ音の顕在化対策"
+
+main_product_values:
+  - value_id: "V01"
+    value: "後席でも会話しやすい"
+    priority: 1
+  - value_id: "V02"
+    value: "長距離でも疲れにくい"
+    priority: 2
+  - value_id: "V03"
+    value: "荒れた路面でも上質に感じる"
+    priority: 3
+  - value_id: "V04"
+    value: "EVらしく静かだが特定音が浮かない"
+    priority: 4
+  - value_id: "V05"
+    value: "軽快な走りと静粛性を両立する"
+    priority: 5
+
+key_design_changes:
+  - "タイヤ銘柄変更（低転がり抵抗化）"
+  - "リアサスペンションブッシュ剛性変更（操安向上）"
+  - "フロア遮音材軽量化（100g/m2削減）"
+  - "サブフレーム締結トルク変更"
+
+evaluation_stages:
+  - stage: "先行評価"
+    timing: "P0試作"
+  - stage: "目標確認評価"
+    timing: "P1試作"
+
+nv_targets:
+  road_noise_front_80kmh: "63dB(A)以下（基準車比-2dB）"
+  road_noise_rear_80kmh: "61dB(A)以下（基準車比-2dB）"
+  low_freq_boom_40kmh: "52dB(A)以下（基準車比-3dB）"
+  wind_noise_120kmh: "65dB(A)以下"
+  motor_noise_60kmh: "45dB(A)以下"

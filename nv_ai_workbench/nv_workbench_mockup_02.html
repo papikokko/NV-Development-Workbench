@@ -1,0 +1,1823 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NV開発AIワークベンチ</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --sb:#1a2435;--sb2:#0f1923;--sb-t:#a8b8d0;--acc:#4a9eff;
+  --bg:#f0f4f8;--card:#fff;--bdr:#e2e8f0;
+  --t1:#1a202c;--t2:#718096;
+  --red:#e53e3e;--redbg:#fff5f5;--redbd:#feb2b2;
+  --ora:#dd6b20;--orabg:#fffaf0;--orabd:#fbd38d;
+  --yel:#d69e2e;--yelbg:#fffff0;--yelbd:#faf089;
+  --grn:#38a169;--grnbg:#f0fff4;--grnbd:#9ae6b4;
+  --blu:#4a9eff;--blubg:#ebf8ff;--blubd:#bee3f8;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--t1);font-size:13px}
+.app{display:flex;flex-direction:column;height:100vh}
+/* header */
+.hdr{background:#0f1923;color:#fff;padding:8px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0;border-bottom:1px solid #2d3748}
+.hdr h1{font-size:14px;font-weight:600}
+.hdr .ver{font-size:9px;color:#4a6080;margin-top:1px}
+.hdr .scn{margin-left:auto;font-size:10px;color:#718096;background:#1a2435;padding:3px 8px;border-radius:4px}
+/* layout */
+.layout{display:flex;flex:1;overflow:hidden}
+/* chat panel */
+.chat-panel{width:320px;flex-shrink:0;background:var(--sb2);display:flex;flex-direction:column;border-right:1px solid #1a2d45}
+.chat-top{padding:10px 12px;border-bottom:1px solid #1a2d45;flex-shrink:0}
+.chat-top-title{font-size:12px;font-weight:700;color:#c8d8f0;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+/* scenario selector */
+.scn-btns{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px}
+.scn-btn{font-size:10px;padding:3px 8px;border-radius:4px;border:1px solid #2d4a6a;background:transparent;color:#a8b8d0;cursor:pointer;transition:all .15s}
+.scn-btn:hover{border-color:var(--acc);color:#c8d8f0}
+.scn-btn.active{background:var(--acc);border-color:var(--acc);color:#fff}
+/* demo button */
+.demo-btn{width:100%;padding:7px;border-radius:6px;border:none;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px}
+.demo-btn.ready{background:#1a4a2a;color:#4ade80;border:1px solid #2d7a4a}
+.demo-btn.ready:hover{background:#2d7a4a}
+.demo-btn.running{background:#2d2000;color:#fbbf24;border:1px solid #5a4000;cursor:not-allowed}
+.demo-btn.done{background:#1a2d4a;color:#60a5fa;border:1px solid #2d4a7a}
+/* step indicator */
+.step-bar{display:flex;gap:3px;padding:6px 12px;border-bottom:1px solid #1a2d45;flex-shrink:0}
+.step-dot{flex:1;height:3px;border-radius:2px;background:#2d3748;transition:background .4s}
+.step-dot.done{background:#4ade80}
+.step-dot.active{background:var(--acc)}
+/* messages */
+.chat-msgs{flex:1;overflow-y:auto;padding:10px}
+.chat-msgs::-webkit-scrollbar{width:4px}
+.chat-msgs::-webkit-scrollbar-track{background:#0f1923}
+.chat-msgs::-webkit-scrollbar-thumb{background:#2d4a6a;border-radius:2px}
+.msg{margin-bottom:8px;animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.bubble{padding:8px 10px;border-radius:6px;font-size:11px;line-height:1.6;white-space:pre-wrap;word-break:break-all}
+.msg.ai .bubble{background:#1a2e4a;border:1px solid #2d4a6a;color:#c8d8f0}
+.msg.user .bubble{background:var(--acc);color:#fff;margin-left:24px}
+.msg.sys .bubble{background:#111d11;border:1px solid #1a3a1a;color:#4ade80;font-size:10px}
+.msg.step .bubble{background:#1d1400;border:1px solid #3d2800;color:#fbbf24;font-size:11px;font-weight:600}
+.msg.done .bubble{background:#0d2211;border:1px solid #1a4a2a;color:#4ade80}
+.msg.typing .bubble{color:#4a6080;font-style:italic}
+.msg-label{font-size:9px;color:#3a5070;margin-bottom:2px;padding-left:2px}
+/* quick chips */
+.chips{padding:6px 10px;border-top:1px solid #1a2d45;flex-shrink:0;display:flex;flex-wrap:wrap;gap:4px}
+.chip{font-size:10px;padding:3px 8px;border-radius:10px;border:1px solid #2d4a6a;color:#a8b8d0;cursor:pointer;background:transparent;transition:all .15s;white-space:nowrap}
+.chip:hover{border-color:var(--acc);color:#c8d8f0;background:#1a2d45}
+/* chat input */
+.chat-input{padding:8px 10px;border-top:1px solid #1a2d45;flex-shrink:0;display:flex;gap:6px}
+.chat-input input{flex:1;background:#1a2435;border:1px solid #2d4a6a;color:#c8d8f0;border-radius:4px;padding:5px 8px;font-size:11px;outline:none}
+.chat-input input::placeholder{color:#3a5070}
+.chat-input input:focus{border-color:var(--acc)}
+.chat-input button{background:var(--acc);border:none;color:#fff;border-radius:4px;padding:5px 10px;font-size:11px;cursor:pointer}
+/* sidebar */
+.sb{width:180px;flex-shrink:0;background:var(--sb);display:flex;flex-direction:column;overflow-y:auto}
+.sb-sec{padding:12px 10px 3px;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#3a5070}
+.sb a{display:flex;align-items:center;gap:6px;padding:6px 12px;font-size:11px;cursor:pointer;color:var(--sb-t);border-left:3px solid transparent;transition:all .15s}
+.sb a:hover{background:rgba(74,158,255,.08);color:#c8d8f0}
+.sb a.active{background:rgba(74,158,255,.13);color:var(--acc);border-left-color:var(--acc)}
+/* content */
+.content{flex:1;overflow-y:auto;padding:18px 20px}
+.sec{display:none}.sec.on{display:block}
+.ptitle{font-size:17px;font-weight:700;margin-bottom:2px}
+.pdesc{font-size:11px;color:var(--t2);margin-bottom:14px}
+.card{background:var(--card);border:1px solid var(--bdr);border-radius:8px;padding:14px;margin-bottom:12px}
+.ctitle{font-size:11px;font-weight:600;color:var(--t2);margin-bottom:8px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:12px}
+/* stat */
+.stat{background:var(--card);border:1px solid var(--bdr);border-radius:8px;padding:12px 16px}
+.slabel{font-size:9px;color:var(--t2);text-transform:uppercase;letter-spacing:.5px}
+.sval{font-size:24px;font-weight:700;margin:2px 0}
+.ssub{font-size:10px;color:var(--t2)}
+/* badge */
+.bdg{display:inline-block;padding:1px 6px;border-radius:8px;font-size:10px;font-weight:600}
+.bdg.C{background:var(--redbg);color:var(--red);border:1px solid var(--redbd)}
+.bdg.H{background:var(--orabg);color:var(--ora);border:1px solid var(--orabd)}
+.bdg.M{background:var(--yelbg);color:var(--yel);border:1px solid var(--yelbd)}
+.bdg.L{background:var(--grnbg);color:var(--grn);border:1px solid var(--grnbd)}
+.bdg.OK{background:var(--grnbg);color:var(--grn);border:1px solid var(--grnbd)}
+.bdg.NG{background:var(--redbg);color:var(--red);border:1px solid var(--redbd)}
+.bdg.I{background:var(--blubg);color:#2b6cb0;border:1px solid var(--blubd)}
+/* table */
+table{width:100%;border-collapse:collapse;font-size:11px}
+th{background:#f7fafc;text-align:left;padding:6px 8px;font-size:9px;font-weight:600;color:var(--t2);text-transform:uppercase;border-bottom:2px solid var(--bdr)}
+td{padding:6px 8px;border-bottom:1px solid var(--bdr);vertical-align:top}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#f7fafc}
+/* issue card */
+.ic{border:1px solid var(--bdr);border-radius:8px;margin-bottom:8px;overflow:hidden}
+.ic.C{border-left:4px solid var(--red)}
+.ic.H{border-left:4px solid var(--ora)}
+.ihdr{padding:10px 12px;display:flex;align-items:center;gap:8px;cursor:pointer;background:var(--card)}
+.ihdr:hover{background:#f7fafc}
+.iscore{font-size:20px;font-weight:700;min-width:34px;text-align:center}
+.iscore.C{color:var(--red)}.iscore.H{color:var(--ora)}.iscore.M{color:var(--yel)}
+.ititle{font-size:12px;font-weight:600;flex:1}
+.isub{font-size:10px;color:var(--t2);margin-top:1px}
+.ibody{padding:0 12px 10px;border-top:1px solid var(--bdr);display:none}
+.ibody.on{display:block}
+/* score bar */
+.sbars{display:grid;grid-template-columns:130px 1fr 30px;gap:3px 6px;align-items:center;margin:6px 0}
+.sbl{font-size:10px;color:var(--t2)}
+.sbg{background:#edf2f7;border-radius:3px;height:4px}
+.sbf{background:var(--blu);border-radius:3px;height:4px;transition:width .6s ease}
+.sbv{font-size:10px;font-weight:600}
+/* trace */
+.tr-row{background:var(--card);border:1px solid var(--bdr);border-radius:6px;margin-bottom:6px}
+.tr-hdr{padding:8px 12px;display:flex;align-items:flex-start;gap:8px;cursor:pointer}
+.tr-hdr:hover{background:#f7fafc;border-radius:6px}
+.tr-id{font-size:9px;font-weight:700;color:var(--blu);min-width:32px;padding-top:1px}
+.tr-text{font-size:11px;flex:1;line-height:1.4}
+.tr-body{padding:0 12px 10px;border-top:1px solid var(--bdr);display:none}
+.tr-body.on{display:block}
+.tg{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:6px}
+.tf{background:#f7fafc;border-radius:4px;padding:5px 7px}
+.tfl{font-size:9px;color:var(--t2);text-transform:uppercase;margin-bottom:1px}
+.tfv{font-size:10px;line-height:1.4}
+/* evidence */
+.ev-node{border:1px solid var(--bdr);border-radius:6px;padding:8px 12px;background:var(--card);margin-bottom:3px}
+.ev-node.inp{border-color:var(--blubd);background:var(--blubg)}
+.ev-node.jdg{border-color:var(--orabd);background:var(--orabg)}
+.ev-node.out{border-color:var(--grnbd);background:var(--grnbg)}
+.ev-con{width:2px;background:#cbd5e0;height:12px;margin-left:18px;margin-bottom:3px}
+.ev-title{font-size:10px;font-weight:600;margin-bottom:2px}
+.ev-content{font-size:10px;color:var(--t2)}
+/* value card */
+.vc{border:1px solid var(--bdr);border-radius:8px;padding:10px 12px;background:var(--card)}
+.vc-id{font-size:9px;color:var(--blu);font-weight:700}
+.vc-t{font-size:12px;font-weight:600;margin:2px 0}
+.vc-d{font-size:10px;color:var(--t2)}
+/* chip tag */
+.ctag{display:inline-block;background:var(--blubg);color:#2b6cb0;border:1px solid var(--blubd);padding:1px 6px;border-radius:8px;font-size:9px;margin:1px}
+/* comment */
+.cmt{background:#f7fafc;border-left:3px solid var(--acc);padding:6px 10px;border-radius:0 4px 4px 0;margin:5px 0;font-size:11px;font-style:italic;line-height:1.6}
+/* drbfm */
+.drbfm-item{border:1px solid var(--bdr);border-radius:6px;margin-bottom:6px;overflow:hidden}
+.drbfm-hdr{background:#f7fafc;padding:6px 10px;font-size:11px;font-weight:600;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:6px}
+.drbfm-body{padding:8px 10px;font-size:11px;line-height:1.6}
+.drbfm-grid{display:grid;grid-template-columns:80px 1fr;gap:3px 10px}
+.drbfm-lbl{font-size:9px;color:var(--t2);text-transform:uppercase;padding-top:1px}
+/* ===== ツールチップ ===== */
+[data-tip]{cursor:help;border-bottom:1px dashed rgba(74,158,255,.5)}
+.tip-pop{position:fixed;z-index:999;background:#0a1628;border:1px solid #2d4a6a;color:#c8d8f0;padding:9px 13px;border-radius:7px;font-size:10px;line-height:1.65;width:250px;box-shadow:0 6px 20px rgba(0,0,0,.6);pointer-events:none;opacity:0;transition:opacity .12s;white-space:normal}
+.tip-pop.vis{opacity:1}
+.tip-pop b{color:#60b8ff}.tip-pop i{color:#94a3b8;font-style:normal}
+/* ===== 情報展開ボックス ===== */
+.info-toggle{display:inline-flex;align-items:center;gap:4px;font-size:9px;color:#4a9eff;cursor:pointer;margin-left:8px;padding:1px 6px;border:1px solid #2d4a6a;border-radius:3px;user-select:none;vertical-align:middle}
+.info-toggle:hover{background:#1a2d45}
+.info-box{background:#070e18;border:1px solid #1a3a5a;border-radius:6px;padding:10px 12px;margin-top:8px;font-size:10px;line-height:1.7;color:#7090b0;display:none}
+.info-box.open{display:block}
+.info-box b{color:#4a9eff}.info-box .ib-row{display:flex;gap:8px;margin-bottom:4px;align-items:flex-start}
+.info-box .ib-key{flex-shrink:0;width:70px;color:#5a8ab0;font-weight:600;padding-top:1px}
+/* ===== 状況設定バナー ===== */
+.ctx-banner{display:flex;align-items:flex-start;gap:10px;background:linear-gradient(135deg,#0f1d2f,#1a2e4a);border:1px solid #2d4a6a;border-radius:8px;padding:12px 14px;margin-bottom:14px}
+.ctx-step{font-size:11px;font-weight:700;color:#4a9eff;background:#0a1628;border:1px solid #2d4a6a;border-radius:6px;padding:4px 8px;white-space:nowrap;flex-shrink:0;margin-top:1px}
+.ctx-body{flex:1}
+.ctx-title{font-size:13px;font-weight:700;color:#c8d8f0;margin-bottom:2px}
+.ctx-desc{font-size:10px;color:#7090b0;line-height:1.5}
+.ctx-q{font-size:10px;font-weight:700;color:#fbbf24;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.25);border-radius:4px;padding:3px 8px;white-space:nowrap;flex-shrink:0;align-self:center}
+/* highlight animation for section focus */
+@keyframes sectionFlash{0%{box-shadow:0 0 0 0 rgba(74,158,255,.4)}70%{box-shadow:0 0 0 8px rgba(74,158,255,0)}100%{box-shadow:0 0 0 0 rgba(74,158,255,0)}}
+.flash{animation:sectionFlash .8s ease}
+/* ===== 開発工程タイムライン ===== */
+.hdr{flex-direction:column;align-items:stretch;padding:0}
+.hdr-top{display:flex;align-items:center;gap:10px;padding:8px 14px}
+.hdr h1{font-size:14px;font-weight:600}
+.hdr .ver{font-size:9px;color:#4a6080;margin-top:1px}
+.hdr .scn{margin-left:auto;font-size:10px;color:#718096;background:#1a2435;padding:3px 8px;border-radius:4px}
+.timeline{display:flex;align-items:center;padding:5px 14px 6px;background:#080f17;border-top:1px solid #1a2435;gap:0;overflow-x:auto;flex-shrink:0}
+.tl-step{font-size:9px;font-weight:500;white-space:nowrap;padding:3px 7px;border-radius:4px;color:#2a3a52;flex-shrink:0}
+.tl-step.done{color:#3d6b55}
+.tl-step.done::before{content:'✓ '}
+.tl-step.current{color:#4a9eff;font-weight:700;background:rgba(74,158,255,.15);border:1px solid rgba(74,158,255,.35);padding:3px 8px}
+.tl-step.current::after{content:' ★';color:#fbbf24}
+.tl-step.future{color:#2a3040}
+.tl-arrow{font-size:9px;color:#1a2a3a;padding:0 3px;flex-shrink:0}
+/* ===== モード切り替え ===== */
+.mode-toggle{display:flex;gap:4px;padding:7px 10px;border-bottom:1px solid #1a2d45;flex-shrink:0}
+.mode-btn{flex:1;font-size:10px;font-weight:600;padding:5px 4px;border-radius:5px;cursor:pointer;transition:all .2s;border:1px solid #2d4a6a;background:#1a2435;color:#607080;display:flex;align-items:center;justify-content:center;gap:3px}
+.mode-btn.active-demo{background:#1a3a22;color:#4ade80;border-color:#2d6a3a}
+.mode-btn.active-step{background:#1e1635;color:#a78bfa;border-color:#4a3a8a}
+.mode-btn.active-real{background:#162040;color:#60a5fa;border-color:#2d4a8a}
+/* ===== Step別 続けるボタン ===== */
+.sw-next-btn{width:100%;background:#0d1e35;color:#60a5fa;border:1px solid #2d4a8a;border-radius:5px;padding:8px 12px;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
+.sw-next-btn:hover{background:#162040}
+/* ===== チャート目的バー ===== */
+.cpb{background:rgba(74,158,255,.04);border:1px solid rgba(74,158,255,.18);border-left:3px solid var(--acc);border-radius:0 6px 6px 0;padding:8px 12px;margin-bottom:10px}
+.cpb-label{font-size:8px;text-transform:uppercase;letter-spacing:.5px;color:var(--blu);font-weight:700;margin-bottom:3px}
+.cpb-title{font-size:11px;color:var(--t1);font-weight:600;line-height:1.4;margin-bottom:4px}
+.cpb-how{font-size:10px;color:var(--t2);line-height:1.5}
+.cpb-tag{display:inline-block;background:var(--blubg);color:var(--blu);border:1px solid var(--blubd);border-radius:3px;font-size:8px;font-weight:700;padding:0 5px;margin-right:4px;vertical-align:middle}
+/* ===== VISUALIZATION HIGHLIGHT ===== */
+.viz-hl{position:relative;outline:2px solid var(--acc);outline-offset:3px;border-radius:8px;animation:vizPulse 1.8s ease-in-out infinite;z-index:1}
+@keyframes vizPulse{0%,100%{box-shadow:0 0 0 3px rgba(74,158,255,.2),0 0 18px rgba(74,158,255,.08)}50%{box-shadow:0 0 0 6px rgba(74,158,255,.42),0 0 30px rgba(74,158,255,.2)}}
+.viz-hl::after{content:'◀ AI 参照中';position:absolute;top:-18px;right:4px;font-size:9px;color:var(--acc);background:#0f1923;border:1px solid rgba(74,158,255,.55);border-radius:3px;padding:0 6px;pointer-events:none;white-space:nowrap;z-index:10;line-height:18px}
+/* ===== 思考バブル ===== */
+.msg.think .bubble{background:#130d24;border:1px solid #2d1a5a;color:#c0b0e8;padding:8px 10px}
+.think-hd{font-size:10px;font-weight:700;color:#a078e8;margin-bottom:5px;display:flex;align-items:center;justify-content:space-between;cursor:pointer}
+.think-tog{font-size:9px;color:#6040a0}
+.think-steps{display:flex;flex-direction:column;gap:3px}
+.think-steps.hide{display:none}
+.tstep{display:flex;gap:5px;font-size:10px;line-height:1.5;opacity:0;transition:opacity .3s}
+.tstep.show{opacity:1}
+.tstep .ti{flex-shrink:0;width:13px}
+.tstep .tt{flex:1;color:#a090d0}
+.tstep.tfile .tt{color:#60a5fa}
+.tstep.tcheck .tt{color:#fbbf24}
+.tstep.tscore .tt{color:#a78bfa}
+.tstep.tresult .tt{color:#4ade80;font-weight:600}
+.tstep.twarn .tt{color:#f97316}
+/* API loading */
+.msg.loading .bubble{background:#0e1d28;border:1px solid #1a3a4a;color:#4a9eff}
+.api-dots{display:inline-flex;gap:3px;margin-left:6px;vertical-align:middle}
+.api-dot{width:4px;height:4px;border-radius:50%;background:var(--acc);animation:dp 1.2s infinite}
+.api-dot:nth-child(2){animation-delay:.2s}.api-dot:nth-child(3){animation-delay:.4s}
+@keyframes dp{0%,80%,100%{opacity:.2;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+/* ===== ゲージバー ===== */
+.gauge-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px}
+.gi{background:#f8fbfd;border:1px solid var(--bdr);border-radius:6px;padding:9px 11px}
+.gi.ng{border-left:3px solid var(--red)}.gi.ok{border-left:3px solid var(--grn)}
+.gi-head{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.gi-id{font-size:9px;font-weight:700;color:#5a7090;background:#eef2f7;padding:1px 5px;border-radius:3px}
+.gi-name{font-size:10px;flex:1;font-weight:500}
+.gi-val{font-size:13px;font-weight:700}.gi-val.ng{color:var(--red)}.gi-val.ok{color:var(--grn)}
+.gi-bdg{font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px}
+.gi-bdg.ng{background:var(--redbg);color:var(--red)}.gi-bdg.ok{background:var(--grnbg);color:var(--grn)}
+.gi-track{background:#e2e8f0;border-radius:4px;height:10px;position:relative;overflow:visible}
+.gi-fill{height:100%;border-radius:4px;transition:width .8s .1s ease}
+.gi-fill.ng{background:linear-gradient(to right,#fca5a5,var(--red))}
+.gi-fill.ok{background:linear-gradient(to right,#86efac,var(--grn))}
+.gi-tline{position:absolute;top:-3px;bottom:-3px;width:2px;background:#4a9eff;border-radius:1px;z-index:2}
+.gi-tline::after{content:attr(data-v);position:absolute;top:-15px;left:50%;transform:translateX(-50%);font-size:8px;color:#4a9eff;white-space:nowrap;font-weight:700;background:rgba(255,255,255,.9);padding:1px 3px;border-radius:2px}
+.gi-tline-min{position:absolute;top:-3px;bottom:-3px;width:2px;background:#dd6b20;border-radius:1px;z-index:2;opacity:.9}
+.gi-tline-del{position:absolute;top:-3px;bottom:-3px;width:2px;background:#38a169;border-radius:1px;z-index:2;opacity:.9}
+.gi-foot{display:flex;justify-content:space-between;margin-top:3px;font-size:9px;color:var(--t2)}
+.gi-gap{font-size:10px;font-weight:700}.gi-gap.ng{color:var(--red)}.gi-gap.ok{color:var(--grn)}
+/* ===== スコアメーター（ランキング） ===== */
+.score-track{background:#edf2f7;border-radius:3px;height:6px;margin:5px 0 2px;position:relative}
+.score-fill{height:100%;border-radius:3px;transition:width .8s ease}
+.score-fill.crit{background:linear-gradient(to right,#fca5a5,var(--red))}
+.score-fill.high{background:linear-gradient(to right,#fcd34d,var(--ora))}
+.score-mark{position:absolute;top:-2px;bottom:-2px;width:1px;background:#94a3b8}
+.score-mark::after{content:attr(data-v);position:absolute;top:-13px;left:50%;transform:translateX(-50%);font-size:8px;color:var(--t2);white-space:nowrap}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="hdr">
+  <div class="hdr-top">
+    <span style="font-size:20px">🔊</span>
+    <div><h1>NV開発AIワークベンチ</h1><div class="ver">判断トレース付き v0.2 — 思考プロセス可視化</div></div>
+    <div class="scn" id="hdrScn">📁 scenario_001: Premium EV/HEV Crossover</div>
+  </div>
+</header>
+
+<div class="layout">
+
+<!-- ========== CHAT PANEL ========== -->
+<div class="chat-panel">
+  <div class="mode-toggle">
+    <button class="mode-btn active-demo" id="modeBtnDemo" onclick="setMode('demo')">▶ 自動再生</button>
+    <button class="mode-btn" id="modeBtnStep" onclick="setMode('step')">⏸ Step別</button>
+    <button class="mode-btn" id="modeBtnReal" onclick="setMode('real')">🤖 Real AI</button>
+  </div>
+  <div class="chat-top">
+    <div class="chat-top-title">🤖 NV AI アシスタント</div>
+    <div class="scn-btns">
+      <button class="scn-btn active" onclick="switchScenario(1,this)">S001 EV Crossover</button>
+      <button class="scn-btn" onclick="switchScenario(2,this)">S002 Sporty Sedan</button>
+      <button class="scn-btn" onclick="switchScenario(3,this)">S003 Minivan</button>
+    </div>
+    <button class="demo-btn ready" id="demoBtn" onclick="startDemo()">▶ シナリオデモを開始</button>
+  </div>
+
+  <div class="step-bar" id="stepBar">
+    <div class="step-dot" id="sd1"></div>
+    <div class="step-dot" id="sd2"></div>
+    <div class="step-dot" id="sd3"></div>
+    <div class="step-dot" id="sd4"></div>
+    <div class="step-dot" id="sd5"></div>
+    <div class="step-dot" id="sd6"></div>
+  </div>
+
+  <div class="chat-msgs" id="chatMsgs"></div>
+
+  <div class="chips" id="chipArea">
+    <button class="chip" onclick="askQ('最優先課題は？')">最優先課題は？</button>
+    <button class="chip" onclick="askQ('タイヤ変更の影響は？')">タイヤの影響は？</button>
+    <button class="chip" onclick="askQ('ブッシュが原因？')">ブッシュが原因？</button>
+    <button class="chip" onclick="askQ('次に必要な検証は？')">次の検証は？</button>
+  </div>
+
+  <div class="chat-input">
+    <input type="text" id="chatInput" placeholder="質問を入力..." onkeydown="if(event.key==='Enter')sendChat()">
+    <button onclick="sendChat()">送信</button>
+  </div>
+</div>
+
+<!-- ========== SIDEBAR ========== -->
+<nav class="sb">
+  <div class="sb-sec">AI開発ステップ</div>
+  <a class="active" onclick="nav('step1',this)">📡 Step 1: 市場を読む</a>
+  <a onclick="nav('step2',this)">🎯 Step 2: コンセプトを決める</a>
+  <a onclick="nav('step3',this)">🔬 Step 3: 前機種との違いを予測</a>
+  <a onclick="nav('step4',this)">📊 Step 4: 予測と実測を照合する</a>
+  <a onclick="nav('step5',this)">🏆 Step 5: 課題の優先順位を決める</a>
+  <a onclick="nav('step6',this)">📝 Step 6: DR向けをまとめる</a>
+  <div class="sb-sec">AI透明性</div>
+  <a onclick="nav('trace',this)">🔍 判断トレース</a>
+  <a onclick="nav('evidence',this)">🗺 Evidence Map</a>
+  <a onclick="nav('flow',this)">🔄 基本導線</a>
+</nav>
+
+<!-- ========== CONTENT ========== -->
+<main class="content">
+
+<!-- ========== STEP 1: 市場を読む ========== -->
+<div id="step1" class="sec on">
+  <div class="ctx-banner">
+    <div class="ctx-step">Step 1</div>
+    <div class="ctx-body">
+      <div class="ctx-title">新型EV Crossover — 開発キックオフ</div>
+      <div class="ctx-desc">競合4社と自社の NV性能をベンチマーク。「どこで差別化できるか」を明らかにする。</div>
+    </div>
+    <div class="ctx-q">この車は何で勝負するか？</div>
+  </div>
+  <div class="cpb">
+    <div class="cpb-label">Step 1 ① まず市場環境を読む</div>
+    <div class="cpb-title"><span class="cpb-tag">なぜ作るか</span>EV市場の構造変化を整理し、NV開発が対応しなければならない方向性を導出する</div>
+    <div class="cpb-how">「トレンド」は外部環境の変化。「NVへの示唆」はそのトレンドが開発に与えるインパクト。<b>緊急度「高」の項目が今回の開発制約</b>を規定している。</div>
+  </div>
+  <div class="card" id="viz-trend">
+    <div class="ctitle">📈 市場トレンド × NV戦略インプリケーション <span data-tip="<b>この表の見方</b><br>トレンド=EV市場で今起きている変化。NVへの示唆=その変化が開発に課す制約。緊急=今回対処必須かどうか。<br><i>各列ヘッダーにマウスを当てるとさらに詳しい説明が出ます。</i>">❓</span></div>
+    <table><thead><tr>
+      <th><span data-tip="<b>トレンドID</b><br>TR01〜TR06の番号で識別する。<br>後のステップで「TR02が原因」と言うとき、ここに戻って確認できる。<br><i>TR = Trend（トレンド）の略</i>">ID</span></th>
+      <th><span data-tip="<b>市場トレンド</b><br>EV自動車市場・消費者行動・業界規制などで<b>実際に起きている変化・潮流</b>。<br>自社だけの問題ではなく、業界全体に影響する外部環境の変化。<br>NV開発の前提条件として押さえる必要がある。">トレンド</span></th>
+      <th><span data-tip="<b>NVへの示唆（インプリケーション）</b><br>その市場トレンドが「NV開発（騒音・振動の設計）」に対して何を求めるか、どんな制約を与えるか。<br>例：EV化でエンジン音が消えると → ロードノイズが相対的に目立つようになる → NV開発はロードノイズ対策が急務になる。<br><i>トレンドを開発指針に翻訳したもの。</i>">NVへの示唆</span></th>
+      <th><span data-tip="<b>緊急度（NV開発としての対応優先度）</b><br>🔴 高 = 今回の開発で必ず対処が必要。無視すると商品性が競合に負ける。<br>🟡 中 = 重要だが今回の試作では許容範囲内。次世代での対応も選択肢。<br><i>この開発でどこに力を入れるべきかの判断材料。</i>">緊急</span></th>
+    </tr></thead>
+    <tbody>
+      <tr><td><b>TR01</b></td><td>EV化によるエンジン音消失</td><td>ロードノイズ・モーター音が相対的に浮き上がる</td><td><span class="bdg C">高</span></td></tr>
+      <tr><td><b>TR02</b></td><td>上級車で後席快適性重要度↑</td><td>後席NL・こもりが商品性評価の主戦場</td><td><span class="bdg C">高</span></td></tr>
+      <tr><td><b>TR03</b></td><td>軽量化要求（航続距離）</td><td>遮音材削減リスク。遮音材追加だけでは対応不可</td><td><span class="bdg C">高</span></td></tr>
+      <tr><td><b>TR04</b></td><td>「音の上質さ」への期待上昇</td><td>dB値だけでなく音質・官能評価との両立が必要</td><td><span class="bdg M">中</span></td></tr>
+      <tr><td><b>TR05</b></td><td>低転がり抵抗タイヤへの切り替え</td><td>タイヤ選定がNVの重大変数になる</td><td><span class="bdg C">高</span></td></tr>
+      <tr><td><b>TR06</b></td><td>競合他社の静粛性レベルが急上昇</td><td>後席会話性・高速クルーズNVが差別化ポイント</td><td><span class="bdg C">高</span></td></tr>
+    </tbody></table>
+    <div style="margin-top:10px;padding:9px 12px;background:#f0f4f8;border-left:3px solid var(--acc);border-radius:0 4px 4px 0;font-size:10px;line-height:1.9;color:var(--t1)">
+      EV市場では3つの構造変化が同時に進行しており、従来のNV開発の前提を覆している。エンジン音が消えたEVではロードノイズやモーター音が相対的に目立つようになり（TR01）、上級EVでは後席の快適性が購買決定を左右する主要因になってきた（TR02）。一方で航続距離確保のための軽量化が必須となり、遮音材を増やすという従来の対策手段が使えなくなっている（TR03）。「何を改善すべきか」と「どう改善するか」の両方が変わった市場環境にある。<b>次は、この変化の中で競合が具体的に何をしてきたかを確認する。</b>
+    </div>
+  </div>
+  <div class="cpb">
+    <div class="cpb-label">Step 1 ② 次に競合4社と自社を比較する</div>
+    <div class="cpb-title"><span class="cpb-tag">ベンチマーク</span>競合4社と自社のNV性能を7軸で比較し、「どこで差別化できるか」を特定する</div>
+    <div class="cpb-how">上の市場トレンドで「なぜその軸が重要か」を確認 → スパイダーチャートで「どの軸で自社が弱いか」を把握 → 右の数値テーブルで差を定量確認する</div>
+  </div>
+  <div class="g2">
+    <div class="card" id="viz-bm">
+      <div class="ctitle">🕸 NVベンチマーク スパイダーチャート <span style="font-size:9px;color:var(--t2);font-weight:400">（自社E:NX2 vs 競合3社）</span><span class="info-toggle" onclick="toggleInfo('bm-info')">📖 読み方・各軸の意味</span></div>
+      <div id="bm-info" class="info-box">
+        <div class="ib-row" style="background:rgba(74,158,255,.06);border-left:3px solid var(--acc)"><div class="ib-key" style="color:var(--acc)">なぜ見るか</div><div><b>競合と自社のNV性能を7軸で比べ、「どの軸で差別化できるか」を決めるためのチャートです。</b><br>この結果がStep 2のコンセプト選択（何を強みにするか）の根拠になります。</div></div>
+        <div class="ib-row"><div class="ib-key">チャートの読み方</div><div>10点満点、<b>外側ほど良い</b>。前機種E:NX1（青）が競合より<b>内側に入っている軸</b>がE:NX2で改善すべき弱点。</div></div>
+        <div class="ib-row"><div class="ib-key">スコアの見方</div><div>10点満点。<b>高いほど良い</b>。各社エンジニアの官能評価と第三者テスト機関の客観測定を組み合わせた推定値。最悪/最低許容/目標/魅力の4点折れ線で変換。</div></div>
+        <div class="ib-row"><div class="ib-key">前席NL</div><div>粗粒路80km/h走行時の前席ロードノイズ（dB値を逆換算）。高速道路相当。</div></div>
+        <div class="ib-row"><div class="ib-key">後席NL（高速路）</div><div>同条件の後席ロードノイズ。<b>購買決定に最も影響する項目（TR02）。</b>IONIQ5との差が最優先課題。</div></div>
+        <div class="ib-row"><div class="ib-key">後席NL（荒れ路）</div><div>荒れ路40km/h走行時の後席ロードノイズ。<b>E:NX2はTeslaより優位。</b>IONIQ5との差が大きい。</div></div>
+        <div class="ib-row"><div class="ib-key">低周波こもり</div><div>荒れ路40km/h時の50Hz以下の低周波音。頭部への圧迫感・疲労感に直結。<b>E:NX2はTeslaより優位。</b></div></div>
+        <div class="ib-row"><div class="ib-key">風切り音</div><div>120km/h走行時の風切り音。高速クルーズ静粛性を左右する。<b>E:NX2は全競合最下位。</b></div></div>
+        <div class="ib-row"><div class="ib-key">モーター/ギヤ音</div><div>加速時のEV特有音。エンジン音が消えたEVでは相対的に目立ちやすい（TR01）。<b>E:NX2は全競合最下位。</b></div></div>
+        <div class="ib-row"><div class="ib-key">ハーシュネス</div><div>段差通過時のショック感。乗り心地の「上質さ」を表す。IONIQ5(9.2)が圧倒的最高値。</div></div>
+      </div>
+      <div style="position:relative;height:260px;padding:10px 0">
+        <canvas id="benchmarkRadar"></canvas>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;font-size:10px">
+        <span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:50%;background:#4a9eff;display:inline-block"></span>Honda E:NX1（前機種実績）</span>
+        <span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:50%;background:#f97316;display:inline-block"></span>Tesla Model Y</span>
+        <span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:50%;background:#a78bfa;display:inline-block"></span>BYD Han</span>
+        <span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:50%;background:#34d399;display:inline-block"></span>Hyundai IONIQ 5</span>
+      </div>
+      <div style="margin-top:10px;padding:9px 12px;background:#f0f4f8;border-left:3px solid var(--acc);border-radius:0 4px 4px 0;font-size:10px;line-height:1.9;color:var(--t1)">
+        市場トレンドで「競合の静粛性レベルが急上昇している（TR06）」とわかった。このチャートは、具体的に誰が・どの軸で・どこまで上げてきたかを確認するためのものだ。<br><br>
+        注目すべきはHyundai IONIQ5の突出した高さだ。IONIQ5は2022年のモデルチェンジで後席ロードノイズ・こもり・ハーシュネスを集中的に改善し、このセグメント全体の競合基準を引き上げた。「IONIQ5が優れている」のではなく、「IONIQ5がこのセグメントのルールを変えた」と読む必要がある。<br><br>
+        前機種E:NX1（青線）の実績は、この新しい競合基準が設定される前の水準にあり、後席高速路ノイズでIONIQ5から1.2ポイント下回っている。ただし荒れ路ノイズ（5.9）とこもり（6.1）はTesla（5.6/5.7）を上回っており、E:NX2が継承できる強みがある。<b>→ 後席高速路ノイズが最も差の大きい軸であり、次のStepではここを軸にどう開発するかを決める。</b>
+      </div>
+    </div>
+    <div class="card" id="viz-bm-score">
+      <div class="ctitle">📈 競合スコア詳細（<span data-tip="<b>10点満点</b>の推定スコア。高いほど静粛性が優れている。左列=NV評価の種類、右4列=各社スコア。<b>赤字=その行の最下位、緑字=その行の最高値。</b>各列ヘッダーにマウスを当てると各社の説明が出ます。">高いほど良い、10点満点 — ❓</span>）</div>
+      <div style="margin-bottom:6px;padding:5px 8px;background:#f8fafc;border-radius:4px;border:1px solid var(--bdr);font-size:10px;color:var(--t2)">
+        スコアは1〜10の推定値（高いほど静粛性が優れている）。各社エンジニアの官能評価と第三者テスト機関の客観測定を組み合わせて変換。
+      </div>
+      <div style="display:flex;gap:12px;font-size:10px;margin-bottom:8px;flex-wrap:wrap;padding:5px 8px;background:#f8fafc;border-radius:4px;border:1px solid var(--bdr)">
+        <span><b style="color:var(--grn)">■ 緑</b> = その行の最高値（業界トップ）</span>
+        <span><b style="color:var(--red)">■ 赤</b> = その行の最下位（改善余地大）</span>
+        <span style="color:var(--t2)">無色 = 中位（優劣なし）</span>
+      </div>
+      <table>
+        <thead><tr>
+          <th><span data-tip="<b>NV軸（評価種別）</b><br>NVとは Noise（騒音）and Vibration（振動）の略。<br>同じ「静粛性」でも、走行シーンや音の種類によって別々に評価する。<br>例：高速でのロードノイズ・荒れ路のこもり・段差ショックは、それぞれ別の問題。">NV軸</span></th>
+          <th><span data-tip="Honda E:NX1（前機種実績）<br><i>今回開発するE:NX2の前世代モデル。競合比較の出発点として使用。赤字は競合に負けている軸。</i>">Honda<br>E:NX1<br><span style='font-size:8px;color:#4a9eff'>★前機種</span></span></th>
+          <th><span data-tip="Tesla Model Y（主要競合）<br><i>グローバルEV SUVのベンチマーク。特に後席静粛性と乗り心地が高水準。今回E:NX2が超えるべき主要ターゲット。</i>">Tesla<br>Model Y</span></th>
+          <th><span data-tip="BYD Han（新興競合）<br><i>中国EV大手の主力セダン。コストパフォーマンス型NVで急速にシェア拡大中。アジア市場で直接競合する。</i>">BYD<br>Han</span></th>
+          <th><span data-tip="Hyundai IONIQ5（競合）<br><i>韓国Hyundaiのフラグシップ EV。欧州・北米でも高評価。NV性能は全軸でバランスよく高水準。</i>">Hyundai<br>IONIQ5</span></th>
+        </tr></thead>
+        <tbody>
+          <tr><td><span data-tip="<b>前席ロードノイズ（高速路）</b><br>粗粒路80km/h走行時の前席測定値（dB）を10点スケールに変換。<br>目標値：R01 ≤63dB(A)。<br><i>E:NX2は全競合最下位（7.6）。Tesla 8.9が最高値。</i>">前席NL（高速路）</span></td><td style="color:var(--red);font-weight:700">7.6</td><td style="color:var(--grn);font-weight:700">8.9</td><td>8.0</td><td>8.3</td></tr>
+          <tr><td><span data-tip="<b>後席ロードノイズ（高速路）</b><br>同条件の後席測定値。購買決定に最も影響する（TR02）。<br>目標値：R02 ≤61dB(A)。<br><i>E:NX1=6.9、IONIQ5=8.1 との差1.2ptがE:NX2の最優先改善軸。</i>">後席NL（高速路）</span></td><td style="font-weight:700">6.9</td><td>7.8</td><td style="color:var(--red);font-weight:700">6.3</td><td style="color:var(--grn);font-weight:700">8.1</td></tr>
+          <tr><td><span data-tip="<b>後席ロードノイズ（荒れ路）</b><br>荒れ路40km/h走行時の後席ロードノイズ。<br>目標値：R03 ≤63dB(A)。<br><i>E:NX1(5.9)はTesla(5.6)より優位。IONIQ5(8.5)との差が大きい。</i>">後席NL（荒れ路）</span></td><td style="font-weight:700">5.9</td><td>5.6</td><td style="color:var(--red);font-weight:700">4.7</td><td style="color:var(--grn);font-weight:700">8.5</td></tr>
+          <tr><td><span data-tip="<b>低周波こもり（荒れ路）</b><br>荒れ路40km/h時の50Hz以下の低周波音。頭部への圧迫感・疲労感に直結。<br>目標値：≤52dB(A)。<br><i>E:NX1(6.1)はTesla(5.7)より優位。IONIQ5(8.5)が圧倒的最高値。</i>">低周波こもり</span></td><td style="font-weight:700">6.1</td><td>5.7</td><td style="color:var(--red);font-weight:700">4.6</td><td style="color:var(--grn);font-weight:700">8.5</td></tr>
+          <tr><td><span data-tip="<b>風切り音</b><br>120km/h走行時のCd値・シール品質に依存。<br><i>E:NX2は全競合最下位（8.1）。Tesla 9.3が最高値。高速クルーズ静粛性の弱点。</i>">風切り音</span></td><td style="color:var(--red);font-weight:700">8.1</td><td style="color:var(--grn);font-weight:700">9.3</td><td>8.6</td><td>8.7</td></tr>
+          <tr><td><span data-tip="<b>モーター/ギヤ音</b><br>加速時のEV特有音。エンジン音がないEVでは目立ちやすい。<br>目標：RSLT06 ≤45dB / 官能「気になる」0%。<br><i>E:NX2は全競合最下位（7.2）。ロードNL改善後に相対的に浮き上がるリスクあり（CMT05）。</i>">モーター/ギヤ音</span></td><td style="color:var(--red);font-weight:700">7.2</td><td style="color:var(--grn);font-weight:700">8.3</td><td>8.0</td><td>8.2</td></tr>
+          <tr><td><span data-tip="<b>ハーシュネス</b><br>段差20〜30mm通過時のショック感。官能評価で判定。<br>目標：R04 ≥4.0点（5段階）。<br><i>E:NX1(6.8)は中位。ブッシュ剛性変更（DC02）がリスク。IONIQ5(9.2)が圧倒的最高値。</i>">ハーシュネス</span></td><td style="font-weight:700">6.8</td><td style="color:var(--red);font-weight:700">6.2</td><td>7.4</td><td style="color:var(--grn);font-weight:700">9.2</td></tr>
+        </tbody>
+      </table>
+      <div style="margin-top:10px;padding:9px 12px;background:#f0f4f8;border-left:3px solid var(--acc);border-radius:0 4px 4px 0;font-size:10px;line-height:1.9;color:var(--t1)">
+        スパイダーチャートで掴んだ全体像を数値で確認する。後席NL高速路（E:NX1 6.9 vs IONIQ5 8.1、差1.2pt）・後席NL荒れ路（5.9 vs 8.5、差2.6pt）・こもり（6.1 vs 8.5、差2.4pt）・ハーシュネス（6.8 vs 9.2、差2.4pt）の4軸でIONIQ5との差が顕著だ。風切り音はE:NX1が全競合最下位（8.1）だが、市場トレンドの優先度（TR02：後席快適性が購買決定を左右する）を踏まえると、E:NX2開発で集中すべき軸は後席高速路ノイズとなる。<b>→ 次のStepでは、このギャップを埋めるための開発コンセプトを3案から選択する。</b>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ========== STEP 2: コンセプトを決める ========== -->
+<div id="step2" class="sec">
+  <div class="ctx-banner">
+    <div class="ctx-step">Step 2</div>
+    <div class="ctx-body">
+      <div class="ctx-title">NV差別化コンセプト — 3案を比較する</div>
+      <div class="ctx-desc">市場分析を踏まえ、NVコンセプトの方向性を3案で提示。チームで議論し、開発の軸を決める。</div>
+    </div>
+    <div class="ctx-q">どのコンセプトで進めるか？</div>
+  </div>
+  <div class="cpb">
+    <div class="cpb-label">Step 2 ビジュアライゼーション</div>
+    <div class="cpb-title"><span class="cpb-tag">意思決定</span>3つのNVコンセプト案を比較し、市場差別化力・商品性整合・重量制約の3軸で最適案を選ぶ</div>
+    <div class="cpb-how">各案のバーが「重視している軸」を示す。<b>★AI推奨の案Aを選ぶ根拠</b>が右の青いボックスに記載されている。ここで「どの軸を最優先にするか」の議論が発生する。</div>
+  </div>
+  <div class="g3" id="viz-concept">
+    <div class="card" style="border:2px solid var(--acc)">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+        <span class="bdg I">案A ★AI推奨</span>
+        <span style="font-size:12px;font-weight:700">後席静粛性特化</span>
+      </div>
+      <div style="font-size:10px;color:var(--t2);margin-bottom:6px">後席NL・こもりにリソースを集中、IONIQ5水準（8.0+）への到達を目標とする</div>
+      <div class="sbars" data-tip="<b>バーの見方</b><br>バーが長いほどこの案がその軸を重視することを示す。<br>★★★=最優先（リソースを集中）<br>★★☆=標準（バランス維持）<br>★☆☆=低優先（最低限確保）">
+        <div class="sbl">後席NV</div><div class="sbg"><div class="sbf" style="width:90%"></div></div><div class="sbv" style="color:var(--grn)">★★★</div>
+      </div>
+      <div class="sbars">
+        <div class="sbl">前席NV</div><div class="sbg"><div class="sbf" style="width:70%"></div></div><div class="sbv">★★☆</div>
+      </div>
+      <div class="sbars">
+        <div class="sbl">走行性能</div><div class="sbg"><div class="sbf" style="width:55%"></div></div><div class="sbv">★★☆</div>
+      </div>
+      <div class="sbars">
+        <div class="sbl">軽量化余地</div><div class="sbg"><div class="sbf" style="width:65%"></div></div><div class="sbv">★★☆</div>
+      </div>
+      <div style="margin-top:8px;font-size:10px;line-height:1.6;background:var(--blubg);padding:6px 8px;border-radius:4px">
+        <b>根拠:</b> TR02/TR06より後席優位が市場差別化の主軸。V01/V02が最優先商品性。重量制約+20kg以内でも達成可能。
+      </div>
+    </div>
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+        <span class="bdg M">案B</span>
+        <span style="font-size:12px;font-weight:700">EV静粛性重視</span>
+      </div>
+      <div style="font-size:10px;color:var(--t2);margin-bottom:8px">モーター音・ギヤ音をゼロに近づける</div>
+      <div class="sbars">
+        <div class="sbl">後席NV</div><div class="sbg"><div class="sbf" style="width:65%"></div></div><div class="sbv">★★☆</div>
+      </div>
+      <div class="sbars">
+        <div class="sbl">EV特有音</div><div class="sbg"><div class="sbf" style="width:90%"></div></div><div class="sbv" style="color:var(--grn)">★★★</div>
+      </div>
+      <div class="sbars">
+        <div class="sbl">走行性能</div><div class="sbg"><div class="sbf" style="width:60%"></div></div><div class="sbv">★★☆</div>
+      </div>
+      <div class="sbars">
+        <div class="sbl">軽量化余地</div><div class="sbg"><div class="sbf" style="width:55%"></div></div><div class="sbv">★★☆</div>
+      </div>
+      <div style="margin-top:8px;font-size:10px;line-height:1.6;background:#fffaf0;padding:6px 8px;border-radius:4px">
+        課題: EV特有音は既に競合水準内（TR04）。後席NLに予算を割かないと差別化点が弱い。
+      </div>
+    </div>
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+        <span class="bdg L">案C</span>
+        <span style="font-size:12px;font-weight:700">走行性能との両立</span>
+      </div>
+      <div style="font-size:10px;color:var(--t2);margin-bottom:8px">NV対策重量を最小化、操安と共存</div>
+      <div class="sbars">
+        <div class="sbl">後席NV</div><div class="sbg"><div class="sbf" style="width:55%"></div></div><div class="sbv">★☆☆</div>
+      </div>
+      <div class="sbars">
+        <div class="sbl">走行性能</div><div class="sbg"><div class="sbf" style="width:85%"></div></div><div class="sbv" style="color:var(--grn)">★★★</div>
+      </div>
+      <div class="sbars">
+        <div class="sbl">軽量化余地</div><div class="sbg"><div class="sbf" style="width:90%"></div></div><div class="sbv" style="color:var(--grn)">★★★</div>
+      </div>
+      <div class="sbars">
+        <div class="sbl">EV特有音</div><div class="sbg"><div class="sbf" style="width:55%"></div></div><div class="sbv">★☆☆</div>
+      </div>
+      <div style="margin-top:8px;font-size:10px;line-height:1.6;background:#f0fff4;padding:6px 8px;border-radius:4px">
+        課題: 後席NV目標値が競合に及ばない。CUVセグメントでは後席重視層が顧客主体。
+      </div>
+    </div>
+  </div>
+  <div style="margin-top:10px;padding:9px 12px;background:#f0f4f8;border-left:3px solid var(--acc);border-radius:0 4px 4px 0;font-size:10px;line-height:1.9;color:var(--t1)">
+    Step 1で「後席高速路ノイズでIONIQ5水準に到達することが最大の差別化機会」と特定した。ただし「後席NVを改善する」といっても、開発リソースの配分の仕方は複数ある。案Bはモーター音など電動系音質を最優先とするが、電動系は既に競合水準内であり差別化効果が薄い。案CはNV対策重量を最小化するが、後席ノイズの目標値が競合に届かない。市場トレンド（TR02：後席快適性が購買決定を左右する）と最優先商品性（V01：後席でも会話しやすい / V02：長距離でも疲れにくい）の両方に最も直結するのが案Aだ。<b>→ 案A「後席静粛性特化」を採用。この判断がStep 3以降のNV要求・評価・課題優先順位の基準になる。</b>
+  </div>
+  <div class="card" id="viz-values">
+    <div class="ctitle">🎯 確定：商品性価値（案A選択後の優先順位） <span data-tip="<b>商品性価値とは</b><br>顧客が「この車を買う理由・使う理由」となる体験価値。<br>技術スペックではなくユーザー視点の言葉で定義する。<br>V01〜V05を満たすためにNV要求（R01〜R08）が設定される。<br><i>タグ（S01など）=どの走行シーンで体験するか。</i>">❓</span></div>
+    <div class="g3">
+      <div class="vc"><div class="vc-id">V01 ★優先1</div><div class="vc-t">後席でも会話しやすい</div><div class="vc-d">高速・粗粒路で普通の声量で会話できる <span class="ctag">S01</span><span class="ctag">S03</span></div></div>
+      <div class="vc"><div class="vc-id">V02 ★優先2</div><div class="vc-t">長距離でも疲れにくい</div><div class="vc-d">3時間以上の連続走行で疲労・頭痛なし <span class="ctag">S03</span><span class="ctag">S04</span></div></div>
+      <div class="vc"><div class="vc-id">V03 ★優先3</div><div class="vc-t">荒れた路面でも上質に感じる</div><div class="vc-d">国内荒れ路・欧州石畳で安っぽさなし <span class="ctag">S04</span><span class="ctag">S06</span></div></div>
+      <div class="vc"><div class="vc-id">V04 ★優先4</div><div class="vc-t">EVらしく静かだが特定音が浮かない</div><div class="vc-d">モーター音・ギヤ音が不自然に浮かない <span class="ctag">S05</span></div></div>
+      <div class="vc"><div class="vc-id">V05 ★優先5</div><div class="vc-t">軽快さと静粛性を両立する</div><div class="vc-d">NV対策重量増+20kg以内に抑制 <span class="ctag">S01</span></div></div>
+    </div>
+    <div style="margin-top:10px;padding:9px 12px;background:#f0f4f8;border-left:3px solid var(--acc);border-radius:0 4px 4px 0;font-size:10px;line-height:1.9;color:var(--t1)">
+      案Aの採用により、V01〜V05の商品性価値が開発全体の判断軸として確定した。Step 3以降の設計変更リスク評価・試作評価・課題ランキングはすべて、この商品性価値への影響を基準として判断する。「何dBが問題か」ではなく「どの顧客体験が損なわれるか」が問いの軸になる。
+    </div>
+  </div>
+</div>
+
+<!-- ========== STEP 3: 前機種との違いを予測する ========== -->
+<div id="step3" class="sec">
+  <div class="ctx-banner">
+    <div class="ctx-step">Step 3</div>
+    <div class="ctx-body">
+      <div class="ctx-title">アーキテクチャー比較 — 前機種から何が変わったか</div>
+      <div class="ctx-desc">E:NX2の設計変更5件を前機種ベースと比較。NVリスクを定量予測し、どこに検証リソースを集中するかを決める。</div>
+    </div>
+    <div class="ctx-q">どのNV要求を最優先にするか？</div>
+  </div>
+  <div class="cpb">
+    <div class="cpb-label">Step 3 ビジュアライゼーション</div>
+    <div class="cpb-title"><span class="cpb-tag">リスク予測</span>前機種からの設計変更5件がNVにどう影響するかをAIが事前予測し、実測前に対策すべき箇所を特定する</div>
+    <div class="cpb-how">左の表で「変更内容 → 予測リスク → 確からしさ」を確認。右のスパイダーチャートで<b>橙線（予測値）が青線（目標）を下回る軸</b>が要対策項目。設計変更が承認される前の段階で行うのがポイント。</div>
+  </div>
+  <div class="g2">
+    <div class="card" id="viz-risk">
+      <div class="ctitle">🔬 設計変更 × NVリスク予測マトリクス <span data-tip="<b>この表の見方</b><br>前機種から変わる設計5件を列挙。「なぜ変えるか」と「変えるとNVがどう悪くなるか」を並べる。<b>変更前にリスクを知ることが目的。</b><br><i>各列ヘッダーにマウスを当てると詳細説明が出ます。</i>">❓</span></div>
+      <table>
+        <thead><tr>
+          <th><span data-tip="<b>設計変更ID</b><br>DC01〜DC05で識別する。<br><i>DC = Design Change（設計変更）の略</i><br>後の評価結果で「DC01が原因」と言うとき、この表に戻って確認できる。">変更ID</span></th>
+          <th><span data-tip="<b>変更内容</b><br>前機種から何が変わるか。部品・材料・構造など具体的な変更内容。<br>例：タイヤの銘柄変更、ブッシュ（サスペンション部品）の材質変更など。">変更内容</span></th>
+          <th><span data-tip="<b>変更理由</b><br>なぜその設計変更をするか。NV以外の要因（燃費・操縦安定性・コスト・軽量化）が多い。<br>NV以外の目的で変更したことが、NVに悪影響を与えるのが課題の本質。">変更理由</span></th>
+          <th><span data-tip="<b>予測NVリスク（3点推定）</b><br>この変更によってNV性能がどう変化するかのAI予測。単位はdB（デシベル）。<br>+数値=悪化方向。3点推定: <span style='color:#38a169'>最良</span>（楽観）/ <b>最頻</b>（最も可能性が高い）/ <span style='color:#e53e3e'>最悪</span>（悲観）。<br><i>まだ試作前なので「予測」。実測で検証が必要。</i>">予測NVリスク（3点推定）</span></th>
+          <th><span data-tip="<b>確からしさ（予測精度）</b><br>High = 前機種で同様の変更事例あり・実績データに基づく予測<br>Medium = 振動理論・類似ケースで支持されるが実測未確認<br>Low = 仮説段階。TPA（伝達経路解析）などで検証が必要<br><i>Lowでも無視できないリスクとして扱う。</i>">確からしさ</span></th>
+          <th><span data-tip="<b>NVリスク総合判定</b><br>予測悪化量と商品性への影響を総合した判定。<br>🔴 大 = 目標値未達が懸念される。優先的に対策が必要。<br>🟠 中 = 影響あるが対策余地がある。<br>🟡 要確認 = 影響量が不明。追加テストが必要。">リスク</span></th>
+        </tr></thead>
+        <tbody>
+          <tr><td><b>DC01</b></td><td>タイヤ低転がり化</td><td>燃費</td><td>前後席NL <span style="color:var(--grn)">+1.5</span>/<b>+2.0</b>/<span style="color:var(--red)">+2.5</span> dB</td><td>High</td><td><span class="bdg C">大</span></td></tr>
+          <tr><td><b>DC02</b></td><td>リアブッシュ+20%高剛性</td><td>操安</td><td>こもり <span style="color:var(--grn)">+1.0</span>/<b>+1.5</b>/<span style="color:var(--red)">+2.0</span> dB<br>NL <span style="color:var(--grn)">+0.3</span>/<b>+0.7</b>/<span style="color:var(--red)">+1.0</span> dB</td><td>Medium</td><td><span class="bdg H">中</span></td></tr>
+          <tr><td><b>DC03</b></td><td>サブフレーム締結変更</td><td>剛性</td><td>経路変化で寄与量不明（TPA待ち）</td><td>Low</td><td><span class="bdg M">要確認</span></td></tr>
+          <tr><td><b>DC04</b></td><td>フロア遮音材-100g/m²</td><td>軽量化</td><td>前席NL <span style="color:var(--grn)">+0.5</span>/<b>+0.8</b>/<span style="color:var(--red)">+1.0</span> dB</td><td>High</td><td><span class="bdg H">中</span></td></tr>
+          <tr><td><b>DC05</b></td><td>新型モーター採用</td><td>EV効率</td><td>ギヤ音 <span style="color:var(--grn)">軽微</span>/<b>+2dB</b>/<span style="color:var(--red)">+4dB</span>（官能顕在化）</td><td>Medium</td><td><span class="bdg H">中</span></td></tr>
+        </tbody>
+      </table>
+      <div style="margin-top:10px;padding:9px 12px;background:var(--orabg);border-left:3px solid var(--ora);border-radius:0 4px 4px 0;font-size:10px;line-height:1.9;color:var(--t1)">
+        コンセプトAが決まったが、E:NX2には前機種からの設計変更が5件ある。これらはすべてNV以外の目的（燃費・操安・軽量化・EV効率）で行われており、結果としてNVに悪影響を与える可能性がある。試作が出てから対策するのでは変更コストとスケジュールへの影響が大きい。この段階でリスクを予測し、対策の準備を先行させることが目的だ。特にDC01（タイヤ低転がり化）とDC02（リアブッシュ高剛性化）が、Step 1で特定した後席ノイズとこもりに直接影響する可能性が高い。<b>→ 右のチャートで定量的な影響を確認する。</b>
+      </div>
+    </div>
+    <div class="card" id="viz-arch">
+      <div class="ctitle">🕸 NVリスク予測チャート <span style="font-size:9px;color:var(--t2);font-weight:400">（前機種ベース vs E:NX2設計変更後予測）</span><span class="info-toggle" onclick="toggleInfo('arch-info')">📖 読み方・各線の意味</span></div>
+      <div id="arch-info" class="info-box">
+        <div class="ib-row" style="background:rgba(74,158,255,.06);border-left:3px solid var(--acc)"><div class="ib-key" style="color:var(--acc)">なぜ見るか</div><div><b>設計変更を承認する前の段階でNV悪化をAIが予測し、対策を先行して準備するためのチャートです。</b><br>実測後の対策より、設計変更前の段階で問題を知るほうが、変更コスト・工数・スケジュールへの影響がずっと小さくなります。</div></div>
+        <div class="ib-row"><div class="ib-key">チャートの読み方</div><div>外側ほど良い。<b>橙線（予測）が青線（目標）より内側に入っている軸が「このままでは目標に届かない」箇所。</b></div></div>
+        <div class="ib-row"><div class="ib-key">3つの線</div><div><b>灰色点線</b>=前機種の実績値（ベースライン）。<b>青実線</b>=今回E:NX2の目標値。<b>橙実線</b>=設計変更5件を加味した予測値。</div></div>
+        <div class="ib-row"><div class="ib-key">読み取り方</div><div>橙線が青線より<b>内側に入ると目標未達リスク</b>。後席NL・こもりで橙が大きく内側に入っているのが視覚的に確認できる。</div></div>
+        <div class="ib-row"><div class="ib-key">DC01の影響</div><div>タイヤ低転がり化が前後席NLを同時に悪化させる。3点推定: 最良+1.5 / <b>最頻+2.0</b> / 最悪+2.5 dB（High確度・前機種類似ケース2件確認済み）。</div></div>
+        <div class="ib-row"><div class="ib-key">DC02の影響</div><div>ブッシュ高剛性化がこもりを最頻+1.5dB（+1.0〜+2.0）、NLを最頻+0.7dB（+0.3〜+1.0）悪化させる。TPA実施前なので Medium確度。</div></div>
+        <div class="ib-row"><div class="ib-key">確度の意味</div><div><b>High</b>=前機種類似ケース確認済み。<b>Medium</b>=理論的根拠あり・実測未確認。<b>Low</b>=仮説段階。</div></div>
+      </div>
+      <div style="position:relative;height:240px;padding:8px 0">
+        <canvas id="archRadar"></canvas>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:4px;font-size:10px">
+        <span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:50%;background:#94a3b8;display:inline-block"></span>前機種ベース実績</span>
+        <span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:50%;background:#4a9eff;display:inline-block"></span>E:NX2目標値</span>
+        <span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:50%;background:#f97316;display:inline-block"></span>設計変更込み予測値</span>
+      </div>
+      <div style="margin-top:10px;padding:9px 12px;background:var(--redbg);border-left:3px solid var(--red);border-radius:0 4px 4px 0;font-size:10px;line-height:1.9;color:var(--t1)">
+        橙線（設計変更込み予測値）が後席ノイズとこもりで青線（E:NX2目標値）を大きく下回っている。DC01（タイヤ）による前後席ノイズ悪化（最頻+2.0dB）とDC02（ブッシュ）によるこもり悪化（最頻+1.5dB）が複合した結果だ。この予測が正しければ、現状の設計のままではR02（後席ノイズ）・R03（こもり）の目標達成は困難になる。<b>→ この予測が実測（Step 4）でどう出たかを照合する。対策はTPA実施後に設計チームと協議する。</b>
+      </div>
+    </div>
+  </div>
+  <div class="card" id="viz-req">
+    <div class="ctitle">📋 NV要求マップ（コンセプトA選択 → 要求導出） <span data-tip="<b>この表の見方</b><br>商品性（V01〜V05）を達成するために、NV性能で何をどこまで満たすべきかを定義した一覧。<br>コンセプトAを選んだことで最優先要求が決まる。<br><i>各列ヘッダーにマウスを当てると詳細説明が出ます。</i>">❓</span></div>
+    <table><thead><tr>
+      <th><span data-tip="<b>NV要求ID</b><br>R01〜R08で識別する。<br><i>R = Requirement（要求）の略</i><br>測定結果で「R02が未達」と言うとき、この表に戻って確認できる。">ID</span></th>
+      <th><span data-tip="<b>NV要求内容</b><br>NV性能で具体的に達成すべき項目。「どの走行条件で」「どの測定部位で」という条件が明示されている。<br>この要求を測定テストで確認する。">要求</span></th>
+      <th><span data-tip="<b>紐づく商品性（V01〜V05）</b><br>この要求を達成しないと、どの「顧客体験価値」が損なわれるかを示す。<br>例：V01=後席での会話しやすさ。<br><i>商品性との接続があることで、NV課題が「顧客への影響」として語れるようになる。</i>">商品性</span></th>
+      <th><span data-tip="<b>評価する走行シーン（S01〜S07）</b><br>どんな状況・道路で測定するかを示す。<br>例：S01=高速クルーズ / S04=荒れ路走行 / S06=段差通過<br><i>「同じ道路を走っても、シーンが違えば要求も違う」ため、シーン別に要求を定義する。</i>">シーン</span></th>
+      <th><span data-tip="<b>目標値</b><br>このNV要求を「達成した」と判断するための具体的な数値基準。<br>dB(A)=A特性音圧レベル（人間の聴覚特性に合わせた音の大きさ）。<br>「以下」=低いほど静か。「以上」=官能スコア等で高いほど良い。">目標値</span></th>
+      <th><span data-tip="<b>設計変更による達成リスク</b><br>今回の設計変更（DC01〜DC05）がこの要求の達成を困難にするか。<br>🔴 悪化見込み = 変更が悪い方向に働く可能性が高い。実測前の対策が必要。<br>🟠 リスクあり = 影響はあるが対策可能。">リスク変更</span></th>
+      <th><span data-tip="<b>要求の優先度</b><br>コンセプトAの商品性から逆算した優先順位。<br>🔴 1 = 最優先。この数値を外すと商品性が成立しない。<br>🟠 2 = 高優先。重要だが他の手段での補完も可能。">優先</span></th>
+    </tr></thead>
+    <tbody>
+      <tr><td><b>R01</b></td><td>前席NL（粗粒路80km/h）</td><td><span class="ctag">V01</span><span class="ctag">V05</span></td><td><span class="ctag">S01</span></td><td>63 dB(A)以下</td><td><span style="color:var(--red)">DC01+DC04で悪化見込み</span></td><td><span class="bdg C">1</span></td></tr>
+      <tr><td><b>R02</b></td><td>後席NL（前席比-2dB以内）</td><td><span class="ctag">V01</span><span class="ctag">V02</span></td><td><span class="ctag">S03</span></td><td>61 dB(A)以下</td><td><span style="color:var(--red)">DC01+DC02で悪化見込み</span></td><td><span class="bdg C">1</span></td></tr>
+      <tr><td><b>R03</b></td><td>低周波こもり（荒れ路40km/h）</td><td><span class="ctag">V02</span><span class="ctag">V03</span></td><td><span class="ctag">S04</span></td><td>52 dB(A)以下</td><td><span style="color:var(--red)">DC02+DC03で経路変化リスク</span></td><td><span class="bdg C">1</span></td></tr>
+      <tr><td><b>R04</b></td><td>ハーシュネス官能スコア</td><td><span class="ctag">V03</span></td><td><span class="ctag">S06</span></td><td>4.0以上（5段階）</td><td><span style="color:var(--ora)">DC02剛性増でリスクあり</span></td><td><span class="bdg H">2</span></td></tr>
+      <tr><td><b>R06</b></td><td>モーター音+音質管理</td><td><span class="ctag">V04</span></td><td><span class="ctag">S05</span></td><td>45 dB(A)以下 / 官能0%</td><td><span style="color:var(--ora)">DC05新型モーター要注意</span></td><td><span class="bdg H">2</span></td></tr>
+    </tbody></table>
+    <div style="margin-top:10px;padding:9px 12px;background:#f0f4f8;border-left:3px solid var(--acc);border-radius:0 4px 4px 0;font-size:10px;line-height:1.9;color:var(--t1)">
+      設計変更リスクの予測を受けて、最も影響を受けるNV要求を確認した。コンセプトAの商品性（V01/V02/V03）から導出されたR01・R02・R03がいずれも「DC01+DC02で悪化見込み」というリスク判定であり、Step 1で特定した差別化軸と完全に重なっている。つまり「市場で重要な軸」「設計変更がリスクになる軸」「NV要求として設定した軸」が一致している状態だ。<b>→ この予測に対して実際の測定値がどう出たかをStep 4で照合する。</b>
+    </div>
+  </div>
+</div>
+
+<!-- DASHBOARD (旧：Step4のサマリー用に残す) -->
+<div id="dashboard" class="sec" style="display:none">
+  <div class="ptitle">ダッシュボード</div>
+  <div class="pdesc">評価サマリー ／ 設計変更4件が複合してNV課題が発生</div>
+  <div class="g4">
+    <div class="stat"><div class="slabel">NG項目</div><div class="sval" style="color:var(--red)">5</div><div class="ssub">測定・官能合計</div></div>
+    <div class="stat"><div class="slabel">CRITICAL</div><div class="sval" style="color:var(--red)">2</div><div class="ssub">最優先課題</div></div>
+    <div class="stat"><div class="slabel">HIGH</div><div class="sval" style="color:var(--ora)">3</div><div class="ssub">高優先課題</div></div>
+    <div class="stat"><div class="slabel">達成</div><div class="sval" style="color:var(--grn)">3</div><div class="ssub">風切り音/モーター音/異音</div></div>
+  </div>
+  <div class="card">
+    <div class="ctitle">📊 測定値ゲージ — 実測 vs 目標（NV要求未達を一目で確認）</div>
+    <div class="gauge-grid">
+      <!-- RSLT03 こもり: scale 45-65 / 魅力49(20%) / 目標52(35%) / 許容54(45%) / 実測56(55%) -->
+      <div class="gi ng">
+        <div class="gi-head"><span class="gi-id">RSLT03</span><span class="gi-name">後席こもり 荒れ路40km/h</span><span class="gi-val ng">56.0</span><span style="font-size:9px;color:var(--t2)">dB(A)</span><span class="gi-bdg ng">NG</span></div>
+        <div class="gi-track"><div class="gi-fill ng" style="width:55%"></div><div class="gi-tline-del" style="left:20%"></div><div class="gi-tline" data-v="目標52.0" style="left:35%"></div><div class="gi-tline-min" style="left:45%"></div></div>
+        <div class="gi-foot"><span>45 dB</span><span class="gi-gap ng">目標比 +4.0dB ▲最大乖離</span><span>65 dB</span></div>
+      </div>
+      <!-- RSLT02 後席NL: scale 55-72 / 魅力59(24%) / 目標61(35%) / 許容63(47%) / 実測63.2(48%) -->
+      <div class="gi ng">
+        <div class="gi-head"><span class="gi-id">RSLT02</span><span class="gi-name">後席ロードノイズ 粗粒路80km/h</span><span class="gi-val ng">63.2</span><span style="font-size:9px;color:var(--t2)">dB(A)</span><span class="gi-bdg ng">NG</span></div>
+        <div class="gi-track"><div class="gi-fill ng" style="width:48%"></div><div class="gi-tline-del" style="left:24%"></div><div class="gi-tline" data-v="目標61.0" style="left:35%"></div><div class="gi-tline-min" style="left:47%"></div></div>
+        <div class="gi-foot"><span>55 dB</span><span class="gi-gap ng">目標比 +2.2dB（許容値ギリギリ超）</span><span>72 dB</span></div>
+      </div>
+      <!-- RSLT01 前席NL: scale 55-72 / 魅力61.5(38%) / 目標63(47%) / 許容65(59%) / 実測64.5(56%) -->
+      <div class="gi ng">
+        <div class="gi-head"><span class="gi-id">RSLT01</span><span class="gi-name">前席ロードノイズ 粗粒路80km/h</span><span class="gi-val ng">64.5</span><span style="font-size:9px;color:var(--t2)">dB(A)</span><span class="gi-bdg ng">NG</span></div>
+        <div class="gi-track"><div class="gi-fill ng" style="width:56%"></div><div class="gi-tline-del" style="left:38%"></div><div class="gi-tline" data-v="目標63.0" style="left:47%"></div><div class="gi-tline-min" style="left:59%"></div></div>
+        <div class="gi-foot"><span>55 dB</span><span class="gi-gap ng">目標比 +1.5dB</span><span>72 dB</span></div>
+      </div>
+      <!-- RSLT04 ハーシュネス（高い方が良）: scale 0-5 / 許容3.5(70%) / 目標4.0(80%) / 魅力4.5(90%) / 実測3.4(68%) -->
+      <div class="gi ng">
+        <div class="gi-head"><span class="gi-id">RSLT04</span><span class="gi-name">ハーシュネス官能（高い方が良）</span><span class="gi-val ng">3.4</span><span style="font-size:9px;color:var(--t2)">/5点</span><span class="gi-bdg ng">NG</span></div>
+        <div class="gi-track"><div class="gi-fill ng" style="width:68%"></div><div class="gi-tline-min" style="left:70%"></div><div class="gi-tline" data-v="目標4.0" style="left:80%"></div><div class="gi-tline-del" style="left:90%"></div></div>
+        <div class="gi-foot"><span>1点</span><span class="gi-gap ng">目標比 −0.6点（高い方が良）</span><span>5点</span></div>
+      </div>
+      <!-- RSLT05 風切り音: scale 55-70 / 魅力62(47%) / 目標65(67%) / 許容66(73%) / 実測64.2(61%) -->
+      <div class="gi ok">
+        <div class="gi-head"><span class="gi-id">RSLT05</span><span class="gi-name">風切り音 120km/h</span><span class="gi-val ok">64.2</span><span style="font-size:9px;color:var(--t2)">dB(A)</span><span class="gi-bdg ok">OK</span></div>
+        <div class="gi-track"><div class="gi-fill ok" style="width:61%"></div><div class="gi-tline-del" style="left:47%"></div><div class="gi-tline" data-v="目標65.0" style="left:67%"></div><div class="gi-tline-min" style="left:73%"></div></div>
+        <div class="gi-foot"><span>55 dB</span><span class="gi-gap ok">目標内 −0.8dB ✓</span><span>70 dB</span></div>
+      </div>
+      <!-- RSLT06 モーター音: scale 36-52 / 魅力42(38%) / 目標45(56%) / 許容47(69%) / 実測44.1(51%) -->
+      <div class="gi ok">
+        <div class="gi-head"><span class="gi-id">RSLT06</span><span class="gi-name">モーター音 60km/h加速</span><span class="gi-val ok">44.1</span><span style="font-size:9px;color:var(--t2)">dB(A)</span><span class="gi-bdg ok">OK</span></div>
+        <div class="gi-track"><div class="gi-fill ok" style="width:51%"></div><div class="gi-tline-del" style="left:38%"></div><div class="gi-tline" data-v="目標45.0" style="left:56%"></div><div class="gi-tline-min" style="left:69%"></div></div>
+        <div class="gi-foot"><span>36 dB</span><span class="gi-gap ok">目標内 −0.9dB ✓</span><span>52 dB</span></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:14px;font-size:9px;color:var(--t2);margin-top:4px;justify-content:flex-end">
+      <span><span style="display:inline-block;width:12px;height:2px;background:#38a169;vertical-align:middle;margin-right:3px;border-radius:1px"></span>魅力ライン</span>
+      <span><span style="display:inline-block;width:12px;height:2px;background:#4a9eff;vertical-align:middle;margin-right:3px;border-radius:1px"></span>目標ライン（判定基準）</span>
+      <span><span style="display:inline-block;width:12px;height:2px;background:#dd6b20;vertical-align:middle;margin-right:3px;border-radius:1px"></span>最低許容ライン</span>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ctitle">⚠️ 最優先課題</div>
+    <div class="ic C"><div class="ihdr" onclick="tog(this)">
+      <div class="iscore C">92</div>
+      <div style="flex:1"><div class="ititle">ISS01 後席 低周波こもり（荒れ路40km/h）</div><div class="isub">RSLT03: 56.0dB ／ 目標比+4.0dB ／ 圧迫感コメント一致</div></div>
+      <span class="bdg C">CRITICAL</span></div>
+    </div>
+    <div class="ic C"><div class="ihdr" onclick="tog(this)">
+      <div class="iscore C">84</div>
+      <div style="flex:1"><div class="ititle">ISS02 後席 ロードノイズ（粗粒路80km/h）</div><div class="isub">RSLT02: 63.2dB ／ 目標比+2.2dB ／ 会話困難コメント一致</div></div>
+      <span class="bdg C">CRITICAL</span></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ctitle">🔎 設計変更×NV影響</div>
+    <table><thead><tr><th>変更ID</th><th>内容</th><th>変更理由</th><th>NV影響（測定確認）</th><th>判定</th></tr></thead>
+    <tbody>
+      <tr><td><b>DC01</b></td><td>タイヤ低転がり化</td><td>燃費</td><td>前席NL +2.1dB（仕様比較）</td><td><span class="bdg NG">主因</span></td></tr>
+      <tr><td><b>DC02</b></td><td>リアブッシュ+20%高剛性</td><td>操安</td><td>後席NL +0.8dB / こもり +1.5dB</td><td><span class="bdg NG">副因</span></td></tr>
+      <tr><td><b>DC03</b></td><td>サブフレーム締結変更</td><td>剛性</td><td>TPA未実施</td><td><span class="bdg M">要確認</span></td></tr>
+      <tr><td><b>DC04</b></td><td>フロア遮音材-100g/m²</td><td>軽量化</td><td>前席NL +0.8dB（有無比較）</td><td><span class="bdg H">副因</span></td></tr>
+      <tr><td><b>DC05</b></td><td>新型モーター採用</td><td>EV効率</td><td>ギヤ音官能 気になる25%</td><td><span class="bdg H">要対応</span></td></tr>
+    </tbody></table>
+  </div>
+</div>
+
+<!-- FLOW -->
+<div id="flow" class="sec">
+  <div class="ptitle">基本導線</div>
+  <div class="pdesc">NV現象から始めない ── 市場・商品性起点で一気通貫につなぐ</div>
+  <div class="card">
+    <div style="display:flex;flex-direction:column;gap:0;max-width:480px">
+      <div class="ev-node inp"><div class="ev-title">📈 市場・ユーザートレンド（TR01〜TR06）</div><div class="ev-content">EV化でエンジン音消失→他音が浮く / 上級車で後席快適性重要 / 軽量化で遮音材追加に頼れない</div></div>
+      <div class="ev-con"></div>
+      <div class="ev-node inp"><div class="ev-title">🎯 商品性価値（V01〜V05）</div><div class="ev-content">V01後席会話性 / V02長距離快適性 / V03荒れ路上質感 / V04EVらしい静粛性 / V05軽快さ×静粛性</div></div>
+      <div class="ev-con"></div>
+      <div class="ev-node inp"><div class="ev-title">🚗 顧客体験シーン（S01〜S07）</div><div class="ev-content">S01高速クルーズ / S03後席長距離 / S04荒れ路走行 / S05加速 / S06段差市街地</div></div>
+      <div class="ev-con"></div>
+      <div class="ev-node inp"><div class="ev-title">📋 NV要求（R01〜R08）</div><div class="ev-content">R01前席NL≤63dB / R02後席NL≤61dB / R03こもり≤52dB / R04ハーシュネス官能≥4 / R06モーター音≤45dB</div></div>
+      <div class="ev-con"></div>
+      <div class="ev-node inp"><div class="ev-title">⚙️ 車両システム・設計変更（DC01〜DC05）</div><div class="ev-content">タイヤ / ブッシュ / サブフレーム締結 / 遮音材 / 新型モーター</div></div>
+      <div class="ev-con"></div>
+      <div class="ev-node inp"><div class="ev-title">🔬 評価結果・官能コメント（RSLT01〜13, CMT01〜06）</div><div class="ev-content">後席NL: +2.2dB NG / こもり: +4.0dB NG / ギヤ音官能: 25%気になる</div></div>
+      <div class="ev-con"></div>
+      <div class="ev-node jdg"><div class="ev-title">⚖️ 商品性未達リスク判定（AI判断 D001〜D005）</div><div class="ev-content">判断軸6軸スコアリング → V01後席会話性・V02長距離快適性・V03荒れ路上質感が未達リスク</div></div>
+      <div class="ev-con"></div>
+      <div class="ev-node jdg"><div class="ev-title">🧪 原因仮説・追加検証（TPA / モーダル解析）</div><div class="ev-content">タイヤ主因(High) / ブッシュ副因(Medium) / サブフレーム寄与未確認 / 追加検証計画</div></div>
+      <div class="ev-con"></div>
+      <div class="ev-node out"><div class="ev-title">📝 DRBFM・判断メモ・知見カード（DR-001〜003, KN01〜04）</div><div class="ev-content">DR提出用 / 次シナリオへの引き継ぎ</div></div>
+      <div class="ev-con"></div>
+      <div class="ev-node out"><div class="ev-title">🔍 判断トレース + Evidence Map</div><div class="ev-content">各判断に使用ファイル・データID・判断軸・根拠・確からしさを記録</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- STRATEGY -->
+<div id="strategy" class="sec">
+  <div class="ptitle">市場・商品性</div>
+  <div class="pdesc">NV開発の起点 ── 市場トレンドを商品性価値に変換する</div>
+  <div class="card">
+    <div class="ctitle">📈 市場トレンド</div>
+    <table><thead><tr><th>ID</th><th>トレンド</th><th>NVへの示唆</th><th>緊急</th></tr></thead>
+    <tbody>
+      <tr><td><b>TR01</b></td><td>EV化によるエンジン音消失</td><td>ロードノイズ・モーター音が相対的に浮き上がる</td><td><span class="bdg C">高</span></td></tr>
+      <tr><td><b>TR02</b></td><td>上級車で後席快適性重要度↑</td><td>後席NL・こもりが商品性評価の主戦場</td><td><span class="bdg C">高</span></td></tr>
+      <tr><td><b>TR03</b></td><td>軽量化要求（航続距離）</td><td>遮音材削減リスク。遮音材追加だけでは対応不可</td><td><span class="bdg C">高</span></td></tr>
+      <tr><td><b>TR04</b></td><td>「音の上質さ」への期待上昇</td><td>dB値だけでなく音質・官能評価との両立が必要</td><td><span class="bdg M">中</span></td></tr>
+      <tr><td><b>TR05</b></td><td>低転がり抵抗タイヤへの切り替え</td><td>タイヤ選定がNVの重大変数になる</td><td><span class="bdg C">高</span></td></tr>
+      <tr><td><b>TR06</b></td><td>競合他社の静粛性レベルが急上昇</td><td>後席会話性・高速クルーズNVが差別化ポイント</td><td><span class="bdg C">高</span></td></tr>
+    </tbody></table>
+  </div>
+  <div class="card">
+    <div class="ctitle">🎯 商品性価値</div>
+    <div class="g3">
+      <div class="vc"><div class="vc-id">V01 ★優先1</div><div class="vc-t">後席でも会話しやすい</div><div class="vc-d">高速・粗粒路で普通の声量で会話できる <span class="ctag">S01</span><span class="ctag">S03</span></div></div>
+      <div class="vc"><div class="vc-id">V02 ★優先2</div><div class="vc-t">長距離でも疲れにくい</div><div class="vc-d">3時間以上の連続走行で疲労・頭痛なし <span class="ctag">S03</span><span class="ctag">S04</span></div></div>
+      <div class="vc"><div class="vc-id">V03 ★優先3</div><div class="vc-t">荒れた路面でも上質に感じる</div><div class="vc-d">国内荒れ路・欧州石畳で安っぽさなし <span class="ctag">S04</span><span class="ctag">S06</span></div></div>
+      <div class="vc"><div class="vc-id">V04 ★優先4</div><div class="vc-t">EVらしく静かだが特定音が浮かない</div><div class="vc-d">モーター音・ギヤ音が不自然に浮かない <span class="ctag">S05</span></div></div>
+      <div class="vc"><div class="vc-id">V05 ★優先5</div><div class="vc-t">軽快さと静粛性を両立する</div><div class="vc-d">NV対策重量増+20kg以内に抑制 <span class="ctag">S01</span></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- REQUIREMENT -->
+<div id="requirement" class="sec">
+  <div class="ptitle">顧客シーン・NV要求</div>
+  <div class="pdesc">商品性 → シーン → NV要求 → NV現象へ接続する</div>
+  <div class="card">
+    <div class="ctitle">🚗 顧客体験シーン</div>
+    <table><thead><tr><th>ID</th><th>シーン</th><th>路面・速度</th><th>NV懸念</th><th>商品性</th><th>優先</th></tr></thead>
+    <tbody>
+      <tr><td><b>S01</b></td><td>高速クルーズ</td><td>良路 100-120km/h</td><td>ロードノイズ/風切り/会話性</td><td><span class="ctag">V01</span><span class="ctag">V04</span></td><td><span class="bdg C">1</span></td></tr>
+      <tr><td><b>S03</b></td><td>後席 長距離</td><td>良路 100km/h</td><td>後席NL/こもり/疲労</td><td><span class="ctag">V01</span><span class="ctag">V02</span></td><td><span class="bdg C">1</span></td></tr>
+      <tr><td><b>S04</b></td><td>荒れ路（国内）</td><td>粗粒路 40-60km/h</td><td>こもり/ハーシュネス/突き上げ</td><td><span class="ctag">V02</span><span class="ctag">V03</span></td><td><span class="bdg H">2</span></td></tr>
+      <tr><td><b>S05</b></td><td>加速・合流</td><td>良路 60-100km/h</td><td>モーター音/ギヤ音</td><td><span class="ctag">V04</span><span class="ctag">V05</span></td><td><span class="bdg M">3</span></td></tr>
+      <tr><td><b>S06</b></td><td>段差・市街地</td><td>段差 20-40km/h</td><td>ハーシュネス/異音</td><td><span class="ctag">V03</span></td><td><span class="bdg M">3</span></td></tr>
+    </tbody></table>
+  </div>
+  <div class="card">
+    <div class="ctitle">📋 NV要求マップ</div>
+    <table><thead><tr><th>ID</th><th>要求</th><th>商品性</th><th>シーン</th><th>目標値</th><th>優先</th></tr></thead>
+    <tbody>
+      <tr><td><b>R01</b></td><td>前席NL（粗粒路80km/h）</td><td><span class="ctag">V01</span><span class="ctag">V05</span></td><td><span class="ctag">S01</span></td><td>63 dB(A)以下</td><td><span class="bdg C">1</span></td></tr>
+      <tr><td><b>R02</b></td><td>後席NL（前席比-2dB以内）</td><td><span class="ctag">V01</span><span class="ctag">V02</span></td><td><span class="ctag">S03</span></td><td>61 dB(A)以下</td><td><span class="bdg C">1</span></td></tr>
+      <tr><td><b>R03</b></td><td>低周波こもり（荒れ路40km/h）</td><td><span class="ctag">V02</span><span class="ctag">V03</span></td><td><span class="ctag">S04</span></td><td>52 dB(A)以下</td><td><span class="bdg C">1</span></td></tr>
+      <tr><td><b>R04</b></td><td>ハーシュネス官能スコア</td><td><span class="ctag">V03</span></td><td><span class="ctag">S06</span></td><td>4.0以上（5段階）</td><td><span class="bdg H">2</span></td></tr>
+      <tr><td><b>R06</b></td><td>モーター音+音質管理</td><td><span class="ctag">V04</span></td><td><span class="ctag">S05</span></td><td>45 dB(A)以下 / 官能0%</td><td><span class="bdg H">2</span></td></tr>
+      <tr><td><b>R07</b></td><td>ギヤ音次数成分管理</td><td><span class="ctag">V04</span></td><td><span class="ctag">S05</span></td><td>官能「気になる」0%</td><td><span class="bdg M">3</span></td></tr>
+    </tbody></table>
+  </div>
+</div>
+
+<!-- STEP 4 -->
+<div id="step4" class="sec">
+  <div class="ctx-banner">
+    <div class="ctx-step">Step 4</div>
+    <div class="ctx-body">
+      <div class="ctx-title">AIの予測と実測を照合する</div>
+      <div class="ctx-desc">Step 3でAIが予測したリスクが実測でどう出たかを照合する。測定値と官能コメントをAIが自動で突き合わせ、「数字の裏にある体験」を言語化する。</div>
+    </div>
+    <div class="ctx-q">何が問題か、なぜ問題か？</div>
+  </div>
+  <div class="ptitle">評価結果・官能コメント</div>
+  <div class="pdesc">測定値と官能コメントを突き合わせて商品性未達リスクを読む</div>
+  <div class="cpb">
+    <div class="cpb-label">Step 4 ビジュアライゼーション</div>
+    <div class="cpb-title"><span class="cpb-tag">予測照合</span>AIが事前に予測した悪化箇所と実測値を突き合わせ、官能コメントで「数字の裏にある体験的意味」を確認する</div>
+    <div class="cpb-how">測定値だけでは「何が問題か」は分かっても「なぜ問題か（体験として）」は分からない。<b>官能コメントが一致した測定値</b>は、顧客が実際に感じている問題として最優先で扱う。</div>
+  </div>
+  <div class="card" id="viz-eval">
+    <div class="ctitle">📊 測定結果（measurement_result.csv）<span class="info-toggle" onclick="toggleInfo('eval-info')">📖 測定条件・各列の意味</span></div>
+    <div id="eval-info" class="info-box">
+      <div class="ib-row" style="background:rgba(74,158,255,.06);border-left:3px solid var(--acc)"><div class="ib-key" style="color:var(--acc)">なぜ見るか</div><div><b>実測値が、Step 2で決めたコンセプトAの商品性要求を満たしているかを確認するための表です。</b>Step 3でAIが予測した悪化軸と照合することで、予測精度と残存リスクを同時に評価します。NG項目がそのままStep 5での課題ランキング対象になります。</div></div>
+      <div class="ib-row"><div class="ib-key">この表の見方</div><div>測定値と目標値を比べ、<b>乖離がプラスならNG（未達）</b>。単位 dB(A)=人間の聴覚に合わせた音の大きさで、大きいほど音が大きい（ハーシュネス官能のみ逆）。</div></div>
+      <div class="ib-row"><div class="ib-key">測定値の単位</div><div>dB(A)=A特性音圧レベル。人間の聴覚特性に合わせた重み付き音圧。<b>値が高いほど音が大きい＝悪い</b>（ハーシュネス官能のみ逆）。</div></div>
+      <div class="ib-row"><div class="ib-key">粗粒路80km/h</div><div>舗装が粗い国内実路相当の路面を時速80kmで走行。タイヤが路面を叩く音（ロードノイズ）が最も出やすい条件。</div></div>
+      <div class="ib-row"><div class="ib-key">荒れ路40km/h</div><div>段差や凸凹が多い生活道路相当。低周波の「こもり音」（50Hz以下）が発生しやすい。</div></div>
+      <div class="ib-row"><div class="ib-key">乖離の読み方</div><div><b>+数値</b>=目標値を上回った（悪い）。目標値は商品性から逆算したNV要求値（R01〜R08）。</div></div>
+      <div class="ib-row"><div class="ib-key">官能評価</div><div>テストドライバーが1〜5点で評価。4.0以上がNV要求（R04）。数字と<b>一致しない場合は要注意</b>（測定方法の限界の可能性）。</div></div>
+    </div>
+    <table><thead><tr>
+      <th><span data-tip="<b>測定結果ID</b><br>RSLT01〜RSLT13で識別する。<br><i>RSLT = Result（結果）の略</i><br>課題ランキングで「RSLT03が最大乖離」と言うとき、この表で確認できる。">ID</span></th>
+      <th><span data-tip="<b>評価項目（何を測ったか）</b><br>どの走行条件・速度・座席位置で測定したかが含まれている。<br>例：「前席NL 粗粒路80km/h」=荒い舗装の道路を80km/hで走ったときの前席の音の大きさ。">評価項目</span></th>
+      <th><span data-tip="<b>測定値（実際の試作車の数値）</b><br>評価コースで試作車を走らせて測定した値。単位は主に dB(A)（デシベル A特性）。<br>dB(A) = 人間の聴覚特性に合わせて重み付けした音圧レベル。<b>数値が大きいほど音が大きい＝悪い</b>（ハーシュネス官能スコアのみ逆）。">測定値</span></th>
+      <th><span data-tip="<b>目標値（NV要求から逆算した合格ライン）</b><br>商品性価値（V01〜V05）を満たすために必要なNV性能の下限値。<br>R01〜R08の要求定義で設定されている。この値を超えると商品性が未達となる。<br>「以下」=静かさの上限 /「以上」=官能スコアの下限。">目標値</span></th>
+      <th><span data-tip="<b>乖離（測定値と目標値の差）</b><br>= 測定値 − 目標値。<br><b>+（プラス）= 目標を超えた（悪い） → NG</b><br>−（マイナス）= 目標内に収まっている（良い） → OK<br>乖離が大きいほど課題が深刻で、対策の優先度が上がる。">乖離</span></th>
+      <th><span data-tip="<b>判定</b><br>NG = 目標値を達成できていない。対策が必要。<br>OK = 目標値を達成している。<br><b>NGの項目が今回の開発課題</b>。ステップ5でどれを優先するか決める。">判定</span></th>
+    </tr></thead>
+    <tbody>
+      <tr style="background:var(--redbg)"><td><b data-tip="<b>RSLT01: 前席ロードノイズ</b><br>測定条件: 粗粒路80km/h（国内実路相当）<br>紐づく要求: R01 ≤63dB<br>紐づく商品性: V01後席会話性<br><i>DC01タイヤ変更とDC04遮音材削減の複合影響と推定。</i>">RSLT01</b></td><td>前席NL 粗粒路80km/h</td><td>64.5 dB(A)</td><td>63.0以下</td><td style="color:var(--red);font-weight:700">+1.5</td><td><span class="bdg NG">NG</span></td></tr>
+      <tr style="background:var(--redbg)"><td><b data-tip="<b>RSLT02: 後席ロードノイズ</b><br>測定条件: 粗粒路80km/h（後席マイク位置）<br>紐づく要求: R02 ≤61dB<br>紐づく商品性: V01後席会話性（最優先）<br><i>CMT01「会話に集中しないといけない」と一致。DC01タイヤ主因・DC02ブッシュ副因。</i>">RSLT02</b></td><td>後席NL 粗粒路80km/h</td><td>63.2 dB(A)</td><td>61.0以下</td><td style="color:var(--red);font-weight:700">+2.2</td><td><span class="bdg NG">NG</span></td></tr>
+      <tr style="background:var(--redbg)"><td><b data-tip="<b>RSLT03: 後席低周波こもり ★最重要</b><br>測定条件: 荒れ路40km/h（50Hz以下の低周波帯）<br>紐づく要求: R03 ≤52dB<br>紐づく商品性: V02長距離快適性 / V03荒れ路上質感<br><i>今回の最大乖離（+4.0dB）。CMT02「頭に響く圧迫感」と完全一致。課題ランキング1位の根拠。</i>">RSLT03</b></td><td>後席こもり 荒れ路40km/h</td><td>56.0 dB(A)</td><td>52.0以下</td><td style="color:var(--red);font-weight:700">+4.0</td><td><span class="bdg NG">NG</span></td></tr>
+      <tr style="background:var(--redbg)"><td><b data-tip="<b>RSLT04: ハーシュネス官能</b><br>測定条件: 段差路 官能評価（テストドライバー 5名評価）<br>紐づく要求: R04 ≥4.0点<br>紐づく商品性: V03荒れ路上質感<br><i>DC02ブッシュ高剛性化の影響と推定。突き上げ感の増加。</i>">RSLT04</b></td><td>ハーシュネス官能</td><td>3.4/5段階</td><td>4.0以上</td><td style="color:var(--red);font-weight:700">−0.6</td><td><span class="bdg NG">NG</span></td></tr>
+      <tr style="background:var(--grnbg)"><td><b data-tip="<b>RSLT05: 風切り音</b><br>測定条件: 良路120km/h（高速道路相当）<br>紐づく要求: R05 ≤65dB<br><i>Step3の予測通り目標達成。ここは強みを維持。</i>">RSLT05</b></td><td>風切り音 120km/h</td><td>64.2 dB(A)</td><td>65.0以下</td><td style="color:var(--grn)">余裕</td><td><span class="bdg OK">OK</span></td></tr>
+      <tr style="background:var(--grnbg)"><td><b>RSLT06</b></td><td>モーター音 60km/h加速</td><td>44.1 dB(A)</td><td>45.0以下</td><td style="color:var(--grn)">余裕</td><td><span class="bdg OK">OK</span></td></tr>
+      <tr style="background:var(--redbg)"><td><b>RSLT08</b></td><td>ギヤ音官能（気になる率）</td><td>25%</td><td>0%</td><td style="color:var(--red);font-weight:700">+25%</td><td><span class="bdg NG">NG</span></td></tr>
+      <tr><td><b>RSLT09</b></td><td>タイヤ新旧比較 前席NL差分</td><td>+2.1 dB</td><td>—</td><td>参考</td><td><span class="bdg I">仕様比較</span></td></tr>
+      <tr><td><b>RSLT11</b></td><td>ブッシュ新旧比較 こもり差分</td><td>+1.5 dB</td><td>—</td><td>参考</td><td><span class="bdg I">仕様比較</span></td></tr>
+      <tr style="background:var(--grnbg)"><td><b>RSLT13</b></td><td>異音（きしみ）官能</td><td>確認なし</td><td>確認なし</td><td>—</td><td><span class="bdg OK">OK</span></td></tr>
+    </tbody></table>
+    <div style="margin-top:10px;padding:9px 12px;background:var(--redbg);border-left:3px solid var(--red);border-radius:0 4px 4px 0;font-size:10px;line-height:1.9;color:var(--t1)">
+      実測結果を確認した。13項目のうちNGは4件。Step 3で予測していたRSLT02（後席ノイズ）とRSLT03（こもり）がともにNG。特にRSLT03の乖離は+4.0dBで、全測定中の最大値だ。Step 3での予測（+1〜4dB）の上限が実際に出た形となった。RSLT04ハーシュネスもDC02ブッシュ高剛性化の影響とみられる。一方で風切り音とモーター音は目標内を維持しており、Step 1で「守れる強み」と判断した軸は守られた。ただし数値だけでは「顧客がどんな体験をしているか」は分からない。<b>→ 次の官能コメントと照合し、顧客体験として実際に問題が出ているかを確認する。</b>
+    </div>
+  </div>
+  <div class="card" id="viz-comments">
+    <div class="ctitle">💬 官能コメント <span data-tip="<b>官能コメントとは</b><br>テストドライバーが実際に車に乗って感じた言葉の記録。数値（dB）だけでは分からない「どう聞こえるか・どう感じるか」を記録する。<br>測定値と一致しているコメントは顧客が実際に感じている問題として最優先で扱う。<br><i>CMT = Comment（コメント）の略</i>">❓</span></div>
+    <div style="margin-bottom:6px"><b style="font-size:11px">CMT01 — 粗粒路80km/h</b> <span class="ctag">RSLT01</span><span class="ctag">RSLT02</span></div>
+    <div class="cmt">「後席では会話に集中しないといけない。高速巡航中に音が入ってくる感じがある。後席が特に課題。」</div>
+    <div style="margin:10px 0 6px"><b style="font-size:11px">CMT02 — 荒れ路40km/h</b> <span class="ctag">RSLT03</span></div>
+    <div class="cmt">「後席で頭に響くような圧迫感がある。長距離乗っていると疲れそう。ボーっとした低い音が断続的に来る。」</div>
+    <div style="margin:10px 0 6px"><b style="font-size:11px">CMT05 — 加速時（ギヤ音）</b> <span class="ctag">RSLT08</span></div>
+    <div class="cmt">「加速の途中で一定の回転域になると、ヒューンとした音がスッと出てくる。ロードノイズが下がると更に目立つ可能性がある。」</div>
+    <div style="margin-top:10px;padding:9px 12px;background:var(--redbg);border-left:3px solid var(--red);border-radius:0 4px 4px 0;font-size:10px;line-height:1.9;color:var(--t1)">
+      測定値と官能コメントの照合により、数値NGが顧客体験として実際に出ていることが確認された。RSLT03のこもり+4.0dBはCMT02「後席で頭に響く圧迫感、長距離で疲れそう」と完全に一致しており、V02「長距離でも疲れにくい」への直接的な未達を意味する。RSLT02の後席ノイズ+2.2dBはCMT01「後席では会話に集中しないといけない」と一致し、V01「後席でも会話しやすい」への未達を示す。測定値と官能の両方で確認された課題は、顧客が実際に感じている問題だ。<b>→ これらを対象に、Step 5で対策の優先順位を決める。</b>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 5 -->
+<div id="step5" class="sec">
+  <div class="ctx-banner">
+    <div class="ctx-step">Step 5</div>
+    <div class="ctx-body">
+      <div class="ctx-title">課題の優先順位を決める</div>
+      <div class="ctx-desc">課題が出た。どれを優先するかが問題だ。AIが6軸スコアリングで順位付けし、「ロードノイズよりこもりが1位の理由」をデータで説明する。</div>
+    </div>
+    <div class="ctx-q">優先順位の根拠を説明できるか？</div>
+  </div>
+  <div class="ptitle">課題ランキング</div>
+  <div class="pdesc">判断軸6軸でスコアリング ── 商品性未達リスクが大きい順</div>
+  <div class="cpb">
+    <div class="cpb-label">Step 5 ビジュアライゼーション</div>
+    <div class="cpb-title"><span class="cpb-tag">優先順位根拠</span>「感覚でうるさいもの」ではなく「商品性への影響が大きいもの」を上位にするためのスコアリング結果</div>
+    <div class="cpb-how">6軸の重み付きスコアを合算（最大105pt）。商品性影響（×5）が最重要軸なので、複数の商品性価値に影響する課題が上位に来る設計。CRITICAL≥80pt / HIGH≥65pt。</div>
+  </div>
+  <div class="card" id="viz-ranking" style="background:var(--blubg);border-color:var(--blubd)">
+    <div style="font-size:11px;color:#2b6cb0"><b>判断軸 <span data-tip="<b>スコアの読み方</b><br>各課題を6軸で採点し重み付きで合算（最大105点）。点数が高いほど今すぐ対策すべき課題。<br>「音が大きい順」ではなく「商品性への影響が大きい順」で並ぶ設計。<br><i>各軸の名称にマウスを当てると重みと説明が出ます。</i>">❓</span>：</b>
+      <span data-tip="<b>商品性影響 ×5</b><br>その課題がV01〜V05の商品性にどれだけ影響するか。<br>影響する商品性の数と重要度で判定。<b>最も重み大（×5）</b>">商品性影響(×5)</span> /
+      <span data-tip="<b>目標乖離 ×4</b><br>測定値が目標値をどれだけ超過しているか（dBやpt）。<br>乖離が大きいほど高スコア。">目標乖離(×4)</span> /
+      <span data-tip="<b>官能一致 ×4</b><br>測定値と官能コメントが一致しているか。<br>一致＝顧客体験に出ている証拠 → 重要度高い。">官能一致(×4)</span> /
+      <span data-tip="<b>再発リスク ×3</b><br>対策しなかった場合に次の試作・量産でも再発するリスク。<br>構造上の問題は再発リスクが高い。">再発リスク(×3)</span> /
+      <span data-tip="<b>不確実性 ×3</b><br>原因が特定できていない度合い。<br>不確実性が高い＝TPA未実施・仮説段階など。リスクとして評価。">不確実性(×3)</span> /
+      <span data-tip="<b>日程影響 ×2</b><br>このまま放置した場合にP1試作・量産DRの日程に影響するか。<br>後工程への波及が大きいほど高スコア。">日程影響(×2)</span>
+      <span data-tip="6軸のスコアを合計した最大値。各軸で5段階評価 × 重み係数。商品性影響が最も重いため、商品性への打撃が大きい課題が必ず上位に来る設計。">最大105pt</span>
+    </div>
+    <div style="margin-top:10px">
+      <div style="font-size:9px;color:var(--t2);margin-bottom:4px">スコア分布（全課題）</div>
+      <div style="display:grid;grid-template-columns:90px 1fr 40px;align-items:center;gap:4px 8px;font-size:10px">
+        <span style="color:var(--red);font-weight:600">ISS01 こもり</span>
+        <div class="score-track"><div class="score-fill crit" style="width:87.6%"></div><div class="score-mark" data-v="CRITICAL≥80" style="left:76.2%"></div></div>
+        <span style="color:var(--red);font-weight:700">92pt</span>
+        <span style="color:var(--red);font-weight:600">ISS02 後席NL</span>
+        <div class="score-track"><div class="score-fill crit" style="width:80%"></div></div>
+        <span style="color:var(--red);font-weight:700">84pt</span>
+        <span style="color:var(--ora);font-weight:600">ISS03 ギヤ音</span>
+        <div class="score-track"><div class="score-fill high" style="width:74.3%"></div></div>
+        <span style="color:var(--ora);font-weight:700">78pt</span>
+        <span style="color:var(--ora);font-weight:600">ISS04 前席NL</span>
+        <div class="score-track"><div class="score-fill high" style="width:71.4%"></div></div>
+        <span style="color:var(--ora);font-weight:700">75pt</span>
+        <span style="color:var(--ora);font-weight:600">ISS05 ハーシュ</span>
+        <div class="score-track"><div class="score-fill high" style="width:69.5%"></div></div>
+        <span style="color:var(--ora);font-weight:700">73pt</span>
+      </div>
+    </div>
+    <div style="margin-top:10px;padding:9px 12px;background:#f0f4f8;border-left:3px solid var(--acc);border-radius:0 4px 4px 0;font-size:10px;line-height:1.9;color:var(--t1)">
+      Step 4でNGが4件出た。開発リソースには限りがあり、すべてを同時に最優先で対策することはできない。このスコアリングは商品性への影響を最重要軸（×5）として設計されており、音の大きさではなく「どの顧客体験を損なうか」を起点に順位を決める。その結果、ISS01こもりが92pt・ISS02後席ノイズが84ptとなり、こもりが最優先となった。<b>→ こもりが1位になる根拠を次で確認する。</b>
+    </div>
+  </div>
+  <div class="ic C" id="viz-iss01"><div class="ihdr" onclick="tog(this)">
+    <div class="iscore C">92</div>
+    <div style="flex:1"><div class="ititle">ISS01 後席 低周波こもり（荒れ路40km/h）</div><div class="isub">RSLT03+CMT02 / V02・V03未達 / +4.0dBかつ圧迫感コメント完全一致</div></div>
+    <span class="bdg C">CRITICAL</span></div>
+    <div class="ibody">
+      <div class="sbars" style="margin-top:8px">
+        <div class="sbl">商品性影響 ×5</div><div class="sbg"><div class="sbf" style="width:100%"></div></div><div class="sbv" style="color:var(--red)">25pt</div>
+        <div class="sbl">目標乖離 ×4</div><div class="sbg"><div class="sbf" style="width:100%"></div></div><div class="sbv" style="color:var(--red)">20pt</div>
+        <div class="sbl">官能一致 ×4</div><div class="sbg"><div class="sbf" style="width:100%"></div></div><div class="sbv" style="color:var(--red)">20pt</div>
+        <div class="sbl">再発リスク ×3</div><div class="sbg"><div class="sbf" style="width:60%"></div></div><div class="sbv">9pt</div>
+        <div class="sbl">不確実性 ×3</div><div class="sbg"><div class="sbf" style="width:80%"></div></div><div class="sbv">12pt</div>
+        <div class="sbl">日程影響 ×2</div><div class="sbg"><div class="sbf" style="width:60%"></div></div><div class="sbv">6pt</div>
+      </div>
+      <div style="font-size:10px;margin-top:6px;padding:8px 10px;background:var(--redbg);border-left:3px solid var(--red);border-radius:0 4px 4px 0;line-height:1.9">
+        こもりが1位の根拠は2点ある。第一に、乖離+4.0dBは今回の全NG測定中の最大値であり、目標比では最も深刻な未達だ。第二に、V02「長距離でも疲れにくい」とV03「荒れた路面でも上質に感じる」の2つの商品性に直接影響する。後席ノイズ（ISS02）は乖離+2.2dBでV01の1軸への影響にとどまる。乖離の大きさと影響する商品性の数を掛け合わせると、こもりが先に来る。<b>この根拠があるからこそ、来週のDRで「ロードノイズより先にこもりを対策する」と説明できる。→ Step 6でDR向けの説明を整理する。</b>
+      </div>
+    </div>
+  </div>
+  <div class="ic C"><div class="ihdr" onclick="tog(this)">
+    <div class="iscore C">84</div>
+    <div style="flex:1"><div class="ititle">ISS02 後席 ロードノイズ（粗粒路80km/h）</div><div class="isub">RSLT02+CMT01 / V01未達 / +2.2dBかつ会話困難コメント一致</div></div>
+    <span class="bdg C">CRITICAL</span></div>
+    <div class="ibody">
+      <div style="font-size:10px;margin-top:8px;padding:6px;background:var(--redbg);border-radius:4px;line-height:1.6">
+        <b>根拠：</b>RSLT09でタイヤ新旧比較-2.1dB悪化確認→DC01が主因（High確度）。RSLT12遮音材比較-0.8dBが追加悪化。<br>
+        <b>次アクション：</b>タイヤ再選定 / ホイールハウス吸音材確認 / DC04遮音材軽量化の是非
+      </div>
+    </div>
+  </div>
+  <div class="ic H"><div class="ihdr" onclick="tog(this)">
+    <div class="iscore H">78</div>
+    <div style="flex:1"><div class="ititle">ISS03 ギヤ音3次成分（加速時）</div><div class="isub">RSLT08+CMT05 / V04未達 / 気になる25%・ロードNL改善後の顕在化リスク</div></div>
+    <span class="bdg H">HIGH</span></div>
+    <div class="ibody">
+      <div style="font-size:10px;margin-top:8px;padding:6px;background:var(--orabg);border-radius:4px;line-height:1.6">
+        <b>重要：</b>ロードノイズが改善されると、このギヤ音が相対的にさらに目立つリスクがある。今の段階から対策を開始する必要がある。<br>
+        <b>次アクション：</b>次数分析で3次成分特定 / DC05モーター電磁力解析 / シャープネス管理値設定
+      </div>
+    </div>
+  </div>
+  <div class="ic H"><div class="ihdr" onclick="tog(this)">
+    <div class="iscore H">75</div>
+    <div style="flex:1"><div class="ititle">ISS04 前席 ロードノイズ（粗粒路80km/h）</div><div class="isub">RSLT01 / V01・V05 / +1.5dB超過</div></div>
+    <span class="bdg H">HIGH</span></div>
+  </div>
+  <div class="ic H"><div class="ihdr" onclick="tog(this)">
+    <div class="iscore H">73</div>
+    <div style="flex:1"><div class="ititle">ISS05 ハーシュネス（段差通過）</div><div class="isub">RSLT04+CMT03 / V03 / 官能スコア3.4（目標4.0未達）</div></div>
+    <span class="bdg H">HIGH</span></div>
+  </div>
+</div>
+
+<!-- TRACE -->
+<div id="trace" class="sec">
+  <div class="ptitle">判断トレース</div>
+  <div class="pdesc">各判断に使用したファイル・データID・判断軸・根拠・確からしさを記録（decision_trace.csv の可視化）</div>
+  <div class="card" style="background:var(--yelbg);border-color:var(--yelbd)">
+    <div style="font-size:11px;color:#744210">💡 AIが「なぜその判断をしたか」を追跡可能にする。各行をクリックで詳細確認。</div>
+  </div>
+  <div class="tr-row"><div class="tr-hdr" onclick="trtog(this)">
+    <div class="tr-id">D001</div>
+    <div class="tr-text">後席低周波こもりを<b>最優先課題（CRITICAL）</b>と判断した</div>
+    <span class="bdg C" style="margin-left:6px">High確度</span></div>
+    <div class="tr-body"><div class="tg">
+      <div class="tf"><div class="tfl">使用ファイル</div><div class="tfv">measurement_result.csv / subjective_comment.md / nv_requirement_map.csv</div></div>
+      <div class="tf"><div class="tfl">データID</div><div class="tfv">RSLT03, CMT02, R03</div></div>
+      <div class="tf"><div class="tfl">判断軸</div><div class="tfv">商品性影響(5)×目標乖離(5)×官能一致(5) = 65pt</div></div>
+      <div class="tf"><div class="tfl">影響商品性</div><div class="tfv">V02長距離快適性 / V03荒れ路上質感</div></div>
+      <div class="tf" style="grid-column:span 2"><div class="tfl">根拠</div><div class="tfv">RSLT03：45Hz付近56.0dB(A)（目標比+4.0dB、最大乖離）。CMT02：後席圧迫感・長距離疲労コメントと完全一致。V02・V03への直接影響が最も大きい。</div></div>
+      <div class="tf"><div class="tfl">確からしさ</div><div class="tfv" style="color:var(--grn);font-weight:700">High（測定値と官能の完全一致）</div></div>
+      <div class="tf"><div class="tfl">次アクション</div><div class="tfv">TPA / ブッシュ前後加速度比較 / フロアモーダル / DC03サブフレーム寄与</div></div>
+    </div></div>
+  </div>
+  <div class="tr-row"><div class="tr-hdr" onclick="trtog(this)">
+    <div class="tr-id">D002</div>
+    <div class="tr-text">後席ロードノイズを<b>最優先課題（CRITICAL）</b>と判断した</div>
+    <span class="bdg C" style="margin-left:6px">High確度</span></div>
+    <div class="tr-body"><div class="tg">
+      <div class="tf"><div class="tfl">データID</div><div class="tfv">RSLT02, RSLT09, CMT01, R02</div></div>
+      <div class="tf"><div class="tfl">影響商品性</div><div class="tfv">V01 後席でも会話しやすい</div></div>
+      <div class="tf" style="grid-column:span 2"><div class="tfl">根拠</div><div class="tfv">RSLT09でタイヤ新旧比較-2.1dB悪化確認→DC01が主因。CMT01「後席で会話に集中しないといけない」と一致。V01（最優先商品性）が直接未達。</div></div>
+      <div class="tf"><div class="tfl">確からしさ</div><div class="tfv" style="color:var(--grn);font-weight:700">High（仕様比較で因果関係確認）</div></div>
+      <div class="tf"><div class="tfl">次アクション</div><div class="tfv">タイヤ再選定 / ホイールハウス吸音材 / DC04遮音材軽量化の是非</div></div>
+    </div></div>
+  </div>
+  <div class="tr-row"><div class="tr-hdr" onclick="trtog(this)">
+    <div class="tr-id">D003</div>
+    <div class="tr-text">ギヤ音3次成分を<b>高優先課題（HIGH）</b>と判断 ── ロードNL改善後の顕在化リスクを考慮</div>
+    <span class="bdg M" style="margin-left:6px">Medium確度</span></div>
+    <div class="tr-body"><div class="tg">
+      <div class="tf"><div class="tfl">データID</div><div class="tfv">RSLT08, CMT05, DC05</div></div>
+      <div class="tf"><div class="tfl">影響商品性</div><div class="tfv">V04 EVらしく静かだが特定音が浮かない</div></div>
+      <div class="tf" style="grid-column:span 2"><div class="tfl">根拠</div><div class="tfv">官能「気になる」25%（目標0%超過）。CMT05「ヒューンとした音がスッと出る」と一致。DC05新型モーターの固有次数成分と推定。ロードノイズ改善後に相対的に浮き上がるリスクあり。</div></div>
+      <div class="tf"><div class="tfl">確からしさ</div><div class="tfv" style="color:var(--yel);font-weight:700">Medium（次数分析で特定が必要）</div></div>
+      <div class="tf"><div class="tfl">次アクション</div><div class="tfv">次数分析 / モーター電磁力解析 / シャープネス管理値設定</div></div>
+    </div></div>
+  </div>
+  <div class="tr-row"><div class="tr-hdr" onclick="trtog(this)">
+    <div class="tr-id">D004</div>
+    <div class="tr-text">DC02ブッシュ高剛性化が低周波こもり・ハーシュネスの<b>副因</b>と判断（仮説）</div>
+    <span class="bdg M" style="margin-left:6px">Medium確度</span></div>
+    <div class="tr-body"><div class="tg">
+      <div class="tf"><div class="tfl">データID</div><div class="tfv">RSLT10, RSLT11, DC02, SYS02</div></div>
+      <div class="tf" style="grid-column:span 1"><div class="tfl">確からしさ</div><div class="tfv" style="color:var(--yel);font-weight:700">Medium（仕様比較確認済み・経路は未特定）</div></div>
+      <div class="tf" style="grid-column:span 2"><div class="tfl">根拠</div><div class="tfv">RSLT11でブッシュ新旧比較こもり+1.5dB悪化確認。ただし操安向上とのトレードオフあり。単純戻しは不可。TPA・剛性最適化の検討が必要。</div></div>
+    </div></div>
+  </div>
+  <div class="tr-row"><div class="tr-hdr" onclick="trtog(this)">
+    <div class="tr-id">D005</div>
+    <div class="tr-text">DC01タイヤ変更がロードノイズ悪化の<b>主因</b>と判断</div>
+    <span class="bdg C" style="margin-left:6px">High確度</span></div>
+    <div class="tr-body"><div class="tg">
+      <div class="tf"><div class="tfl">データID</div><div class="tfv">RSLT09, DC01, NV01</div></div>
+      <div class="tf"><div class="tfl">確からしさ</div><div class="tfv" style="color:var(--grn);font-weight:700">High（仕様比較で因果確認済み）</div></div>
+      <div class="tf" style="grid-column:span 2"><div class="tfl">根拠</div><div class="tfv">RSLT09：タイヤ新旧比較で前席NL+2.1dB悪化。ISS04（+1.5dB超過）の大部分を説明できる。低転がり化とNV悪化の相関は業界的に確立（再発リスク=4）。</div></div>
+    </div></div>
+  </div>
+</div>
+
+<!-- EVIDENCE -->
+<div id="evidence" class="sec">
+  <div class="ptitle">Evidence Map</div>
+  <div class="pdesc">ISS01（後席低周波こもり）の判断根拠をデータから出力まで一本線でつなぐ</div>
+  <div class="g2">
+    <div>
+      <div style="font-size:10px;font-weight:600;color:var(--t2);margin-bottom:6px">📥 使用した入力データ</div>
+      <div class="ev-node inp"><div class="ev-title">市場トレンド（TR02/TR03）</div><div class="ev-content">上級車で後席快適性重要度↑ / 軽量化で遮音材追加に頼れない</div></div>
+      <div class="ev-con"></div>
+      <div class="ev-node inp"><div class="ev-title">商品性（V02/V03）</div><div class="ev-content">長距離快適性 / 荒れ路上質感</div></div>
+      <div class="ev-con"></div>
+      <div class="ev-node inp"><div class="ev-title">NV要求（R03）</div><div class="ev-content">低周波こもり ≤52dB(A)（荒れ路40km/h）</div></div>
+      <div class="ev-con"></div>
+      <div class="ev-node inp"><div class="ev-title">評価結果（RSLT03）</div><div class="ev-content">56.0 dB(A) ／ 45Hz付近 ／ 目標比 +4.0dB</div></div>
+      <div class="ev-con"></div>
+      <div class="ev-node inp"><div class="ev-title">官能コメント（CMT02）</div><div class="ev-content">「後席で頭に響く圧迫感」「長距離で疲れそう」</div></div>
+      <div class="ev-con"></div>
+      <div class="ev-node inp"><div class="ev-title">設計変更（DC01/DC02/DC03）</div><div class="ev-content">タイヤ低転がり化 / ブッシュ高剛性+20% / サブフレーム締結変更</div></div>
+      <div class="ev-con"></div>
+      <div class="ev-node inp"><div class="ev-title">仕様比較（RSLT11）</div><div class="ev-content">ブッシュ新旧比較でこもり+1.5dB悪化確認</div></div>
+    </div>
+    <div>
+      <div style="font-size:10px;font-weight:600;color:var(--t2);margin-bottom:6px">⚖️ 判断 → 📤 出力</div>
+      <div class="ev-node jdg"><div class="ev-title">判断軸スコアリング（D001）</div><div class="ev-content">商品性影響25+目標乖離20+官能一致20+再発9+不確実12+日程6 = <b>92pt CRITICAL</b></div></div>
+      <div class="ev-con"></div>
+      <div class="ev-node jdg"><div class="ev-title">商品性未達リスク判定</div><div class="ev-content">V02・V03が直接未達。測定値と官能が完全一致。最優先確定。</div></div>
+      <div class="ev-con"></div>
+      <div class="ev-node jdg"><div class="ev-title">原因仮説</div><div class="ev-content">DC01+DC02+DC03の複合寄与。TPA未実施で経路未特定。断定せず仮説扱い。</div></div>
+      <div class="ev-con"></div>
+      <div class="ev-node out"><div class="ev-title">追加検証計画</div><div class="ev-content">① TPA ② ブッシュ前後加速度比較 ③ フロアモーダル解析 ④ サブフレーム寄与確認</div></div>
+      <div class="ev-con"></div>
+      <div class="ev-node out"><div class="ev-title">DRBFMアイテム（DR-002）</div><div class="ev-content">DC02ブッシュ高剛性化に起因するこもり悪化リスク</div></div>
+      <div class="ev-con"></div>
+      <div class="ev-node out"><div class="ev-title">知見カード（KN02）</div><div class="ev-content">「操安目的のブッシュ高剛性化は低周波こもりを悪化させる。変更前にTPA予測で寄与量を確認すること。」</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 6 -->
+<div id="step6" class="sec">
+  <div class="ctx-banner">
+    <div class="ctx-step">Step 6</div>
+    <div class="ctx-body">
+      <div class="ctx-title">DR向けをまとめる</div>
+      <div class="ctx-desc">来週DRがある。方針と根拠をまとめる必要がある。AIがDRBFM・判断メモ・知見カードを自動生成。「DRで何をどう説明するか」を整理する。</div>
+    </div>
+    <div class="ctx-q">DRで何をどう説明するか？</div>
+  </div>
+  <div class="ptitle">判断メモ・DRBFM・知見カード</div>
+  <div class="pdesc">次のDRに向けた開発判断 ── 根拠ある形で残す</div>
+  <div class="cpb">
+    <div class="cpb-label">Step 6 ビジュアライゼーション</div>
+    <div class="cpb-title"><span class="cpb-tag">DR準備</span>Step 1〜5の分析結果を「DRで説明できる形」に整理する。判断根拠・対策方針・知見の3層構造で記録する</div>
+    <div class="cpb-how">判断メモ＝方針と根拠の要約。DRBFM＝設計変更別のリスクと確認方法。知見カード＝今回学んだことを次の開発シナリオへ引き継ぐ資産。<b>この3点がそろってDRで説明できる状態</b>になる。</div>
+  </div>
+  <div class="card" id="viz-decision">
+    <div class="ctitle">📝 開発判断メモ</div>
+    <div style="margin-bottom:10px;padding:9px 12px;background:#f0f4f8;border-left:3px solid var(--acc);border-radius:0 4px 4px 0;font-size:10px;line-height:1.9;color:var(--t1)">
+      Step 1〜5の分析を経て、優先順位と対策方針が決まった。来週のDRでは「何が問題か・なぜその順番で対策するのか・どう対処するか」を根拠付きで説明する必要がある。以下がその判断の要約だ。
+    </div>
+    <div style="font-size:11px;line-height:1.9">
+      ① <b>最優先：後席こもりとNLの同時対策方針</b>とする。遮音材増量は重量制約（TR03）に反するため対策の主軸から外す。<br>
+      ② <b>タイヤ再選定（DC01）</b>を最大効果対策として検討。RSLT09で+2.1dBの単体悪化が確認済み。燃費チームとの調整が必要。<br>
+      ③ <b>DC02ブッシュ</b>はNV的に副因確認済みだが操安要求もある。TPA結果待ちで最適剛性を操安チームと再協議する。<br>
+      ④ <b>ギヤ音（ISS03）</b>は今の段階で対策を開始する。ロードNL改善後に相対的に顕在化するリスクあり。<br>
+      ⑤ <b>風切り音・モーター音dB・異音</b>は目標達成。ただしロードNL改善後のギヤ音との音バランス再確認を次回評価に追加する。
+    </div>
+  </div>
+  <div class="card" id="viz-drbfm">
+    <div class="ctitle">⚠️ DRBFMアイテム <span data-tip="<b>DRBFMとは</b><br>Design Review Based on Failure Mode。設計変更を起点とした問題の事前検討フォーマット。<br>「何を変えたら・何が心配で・どう確認するか」をDRで説明するための標準書式。<br><i>トヨタが開発した手法で自動車業界で広く使われている。</i>">❓</span></div>
+    <div style="margin-bottom:10px;padding:9px 12px;background:#f0f4f8;border-left:3px solid var(--acc);border-radius:0 4px 4px 0;font-size:10px;line-height:1.9;color:var(--t1)">
+      Step 3で予測し、Step 4で実測確認した設計変更リスクを、DRで説明できる形にまとめた。DRでは「この設計変更が・こういう問題を起こしており・この根拠で確認できており・次はこう対応する」という順番で説明する。DR-001（DC01タイヤ）は仕様比較で因果が確認済みのためHigh確度。DR-002（DC02ブッシュ）は実測確認済みだがTPA未実施のためMedium確度。DR-003（DC05モーター）はロードノイズ改善後に顕在化するリスクとして今から管理が必要だ。
+    </div>
+    <div class="drbfm-item">
+      <div class="drbfm-hdr"><span class="bdg C">DR-001</span> DC01 タイヤ低転がり化 → ロードノイズ悪化</div>
+      <div class="drbfm-body"><div class="drbfm-grid">
+        <div class="drbfm-lbl">懸念事項</div><div>前後席NLが目標比+1.5〜+2.2dB超過（RSLT01/02）</div>
+        <div class="drbfm-lbl">影響商品性</div><div>V01後席会話性・V05軽快さと静粛性の両立</div>
+        <div class="drbfm-lbl">確認方法</div><div>代替タイヤ候補の仕様比較 / ホイールハウス吸音材追加効果確認</div>
+        <div class="drbfm-lbl">確からしさ</div><div><span class="bdg OK">High</span>（仕様比較-2.1dB確認済み）</div>
+      </div></div>
+    </div>
+    <div class="drbfm-item">
+      <div class="drbfm-hdr"><span class="bdg C">DR-002</span> DC02 ブッシュ高剛性化 → こもり・ハーシュネス悪化</div>
+      <div class="drbfm-body"><div class="drbfm-grid">
+        <div class="drbfm-lbl">懸念事項</div><div>こもり+1.5dB・後席NL+0.8dBの悪化（RSLT10/11）</div>
+        <div class="drbfm-lbl">確認方法</div><div>TPA実施 / 剛性最適化によるNV・操安両立点探索</div>
+        <div class="drbfm-lbl">確からしさ</div><div><span class="bdg M">Medium</span>（仕様比較確認・経路未特定）</div>
+      </div></div>
+    </div>
+    <div class="drbfm-item">
+      <div class="drbfm-hdr"><span class="bdg H">DR-003</span> DC05 新型モーター → ギヤ音次数成分の顕在化</div>
+      <div class="drbfm-body"><div class="drbfm-grid">
+        <div class="drbfm-lbl">懸念事項</div><div>加速時ギヤ音官能「気になる」25%（RSLT08）</div>
+        <div class="drbfm-lbl">確認方法</div><div>次数分析で3次成分特定 / モーター電磁力解析 / シャープネス管理値設定</div>
+        <div class="drbfm-lbl">確からしさ</div><div><span class="bdg M">Medium</span>（次数分析待ち）</div>
+      </div></div>
+    </div>
+  </div>
+  <div class="card" id="viz-knowledge">
+    <div class="ctitle">🎓 知見カード（次シナリオへの引き継ぎ） <span data-tip="<b>知見カードとは</b><br>今回の開発で学んだ「次も使える教訓」を記録したもの。次の開発シナリオでAIが自動参照し、同じ失敗を繰り返さないための知識資産。<br><i>各列ヘッダーにマウスを当てると詳細説明が出ます。</i>">❓</span></div>
+    <table><thead><tr>
+      <th><span data-tip="<b>知見ID</b><br>KN01〜KN04で識別する。<br><i>KN = Knowledge（知識・知見）の略</i>">ID</span></th>
+      <th><span data-tip="<b>知見内容</b><br>今回の開発から得た「次回以降にも使える教訓」。<br>具体的な数値・条件・注意点を含む。同じ問題を次のプロジェクトで繰り返さないための記録。">知見</span></th>
+      <th><span data-tip="<b>適用範囲</b><br>この知見がどんな開発シナリオで有効か。<br>例：「タイヤ変更全シナリオ」=EV/HEV/ガソリン車問わず、タイヤを変更するプロジェクトすべてに適用できる。">適用範囲</span></th>
+      <th><span data-tip="<b>知見の確度（信頼性）</b><br>High = 複数案件で確認済み。高い確信を持って使える。<br>Medium = 今回1件で確認。他でも成立する可能性高いが要確認。<br><i>確度が低くても「要注意」として活用価値あり。</i>">確度</span></th>
+    </tr></thead>
+    <tbody>
+      <tr><td><b>KN01</b></td><td>低転がりタイヤ変更はNLを2〜3dB悪化させる傾向。選定段階で仕様比較を必ず実施する。</td><td>タイヤ変更全シナリオ</td><td><span class="bdg OK">High</span></td></tr>
+      <tr><td><b>KN02</b></td><td>操安目的のブッシュ高剛性化は低周波こもりを悪化させる。変更前にTPA予測で寄与量を確認すること。</td><td>サスペンション変更全シナリオ</td><td><span class="bdg M">Medium</span></td></tr>
+      <tr><td><b>KN03</b></td><td>EV/HEVではロードNL改善後にギヤ音・モーター音が浮き上がる。ロードNL対策と同時に電動系音の管理値を設定する。</td><td>EV/HEVシナリオ全般</td><td><span class="bdg OK">High</span></td></tr>
+      <tr><td><b>KN04</b></td><td>遮音材-100g/m²相当でNLが0.5〜1.0dB悪化する傾向。軽量化と同等のNV対策を源流・経路で確保すること。</td><td>軽量化シナリオ全般</td><td><span class="bdg M">Medium</span></td></tr>
+    </tbody></table>
+    <div style="margin-top:10px;padding:9px 12px;background:#f0f4f8;border-left:3px solid var(--acc);border-radius:0 4px 4px 0;font-size:10px;line-height:1.9;color:var(--t1)">
+      今回の開発で確認された知見を、次のシナリオへ引き継げる形でカード化した。タイヤ・ブッシュ・EV音・軽量化の4領域で「この変更をするとNVにこう影響する」というパターンが蓄積された。次の開発でAIがこの知見を参照することで、Step 1〜3の分析を1から繰り返すことなく前回の知見を起点に判断できるようになる。これがAIワークベンチとしての「学習と引き継ぎ」の実体だ。
+    </div>
+  </div>
+</div>
+
+</main>
+</div>
+</div>
+
+<script>
+// ===== STATE & TIMER MANAGEMENT =====
+let currentMode = 'demo';
+let demoTimers = [], swTimers = [];
+let demoRunning = false, swRunning = false;
+let swGroups = [], swGroupIdx = 0;
+
+function cancelAll() {
+  demoTimers.forEach(t => clearTimeout(t)); demoTimers = [];
+  swTimers.forEach(t => clearTimeout(t));   swTimers = [];
+  demoRunning = false; swRunning = false;
+}
+
+function setMode(m) {
+  cancelAll();
+  highlightEl(null);
+  swGroups = []; swGroupIdx = 0;
+  currentMode = m;
+  document.getElementById('modeBtnDemo').className = 'mode-btn' + (m==='demo' ? ' active-demo' : '');
+  document.getElementById('modeBtnStep').className = 'mode-btn' + (m==='step' ? ' active-step' : '');
+  document.getElementById('modeBtnReal').className = 'mode-btn' + (m==='real' ? ' active-real' : '');
+  msgs.innerHTML = '';
+  if (m === 'real') {
+    addMsg('sys', '🤖 Real AI モード ON — Claude が scenario_001 のファイルを読んで分析します');
+    addMsg('ai', 'Real AI モードへ切り替えました。\n\n🤖 Real AI 分析を開始 を押すと、思考プロセスを表示しながら Step 1〜6 を実行します。\nまたは下のクイックチップで個別質問も可能です。');
+  } else if (m === 'step') {
+    addMsg('sys', '⏸ Step別モード — 1Stepずつ確認しながら進めます');
+    addMsg('ai', 'Step別モードへ切り替えました。\n\n各Stepの内容が終わると自動で一時停止します。確認・質問してから「▶ Step N へ進む」を押して次へ進んでください。\n\nいつでも「↺ リセット」で最初からやり直せます。');
+  } else {
+    addMsg('sys', '▶ 自動再生モード — Step 1〜6 を自動で流します');
+    addMsg('ai', '自動再生モードへ切り替えました。\n▶ シナリオデモを開始 を押すと Step 1〜6 を通しで再生します。');
+  }
+  const btn = document.getElementById('demoBtn');
+  btn.className = 'demo-btn ready';
+  btn.textContent = m === 'real' ? '🤖 Real AI 分析を開始' : m === 'step' ? '⏸ Step別デモを開始' : '▶ シナリオデモを開始';
+  btn.onclick = m === 'real' ? startRealDemo : m === 'step' ? startStepwiseDemo : startDemo;
+  resetStepDots();
+}
+
+// ===== NAV =====
+function nav(id, el) {
+  document.querySelectorAll('.sec').forEach(s => s.classList.remove('on'));
+  document.querySelectorAll('.sb a').forEach(a => a.classList.remove('active'));
+  document.getElementById(id).classList.add('on');
+  el.classList.add('active');
+  document.getElementById(id).classList.add('flash');
+  setTimeout(() => document.getElementById(id).classList.remove('flash'), 800);
+}
+function navById(id) {
+  document.querySelectorAll('.sec').forEach(s => s.classList.remove('on'));
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.add('on');
+  // map: step1〜6, trace, evidence, flow
+  const map = {step1:0,step2:1,step3:2,step4:3,step5:4,step6:5,trace:6,evidence:7,flow:8};
+  const links = document.querySelectorAll('.sb a');
+  links.forEach(a => a.classList.remove('active'));
+  if (map[id] !== undefined) links[map[id]].classList.add('active');
+  el.classList.add('flash');
+  setTimeout(() => el.classList.remove('flash'), 800);
+}
+
+// ===== TOGGLE =====
+function tog(el) { const b = el.nextElementSibling; if(b) b.classList.toggle('on'); }
+function trtog(el) { const b = el.nextElementSibling; if(b) b.classList.toggle('on'); }
+
+// ===== CHAT =====
+const msgs = document.getElementById('chatMsgs');
+function fmt(t){return t.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<b>$1</b>')}
+function addMsg(type, text) {
+  const d = document.createElement('div');
+  d.className = 'msg ' + type;
+  const label = (type==='user'||type==='sys'||type==='step'||type==='done'||type==='loading') ? '' : '<div class="msg-label">NV AI</div>';
+  d.innerHTML = label + '<div class="bubble">' + fmt(text) + '</div>';
+  msgs.appendChild(d);
+  msgs.scrollTop = msgs.scrollHeight;
+  return d;
+}
+function addTyping() { return addMsg('typing', '⋯'); }
+
+// ===== 思考バブル =====
+function addThinkMsg(steps) {
+  const d = document.createElement('div');
+  d.className = 'msg think';
+  const stepHtml = steps.map(s=>`<div class="tstep ${s.c||''}"><span class="ti">${s.i}</span><span class="tt">${s.t}</span></div>`).join('');
+  d.innerHTML = `<div class="msg-label">🧠 思考ログ</div><div class="bubble"><div class="think-hd" onclick="var s=this.nextElementSibling;s.classList.toggle('hide');this.querySelector('.think-tog').textContent=s.classList.contains('hide')?'▶ 展開':'▼ 折りたたむ'">🧠 思考プロセス（クリックで折りたたみ）<span class="think-tog">▼ 折りたたむ</span></div><div class="think-steps">${stepHtml}</div></div>`;
+  msgs.appendChild(d);
+  msgs.scrollTop = msgs.scrollHeight;
+  // アニメーション: 各ステップを300msずつフェードイン
+  const stepEls = d.querySelectorAll('.tstep');
+  stepEls.forEach((el,i) => setTimeout(()=>{ el.classList.add('show'); msgs.scrollTop=msgs.scrollHeight; }, i*280));
+  return { el: d, duration: steps.length * 280 + 200 };
+}
+
+function addLoadingMsg() {
+  const d = document.createElement('div');
+  d.className = 'msg loading';
+  d.innerHTML = `<div class="bubble">Claude API に問い合わせ中...<span class="api-dots"><span class="api-dot"></span><span class="api-dot"></span><span class="api-dot"></span></span></div>`;
+  msgs.appendChild(d); msgs.scrollTop = msgs.scrollHeight;
+  return d;
+}
+
+// ===== 思考ステップ定義 =====
+const thinkSteps = {
+  // Step1: 市場・競合分析
+  s1: [
+    {c:'tfile',i:'📂',t:'market_trend.yaml 読み込み中（TR01〜TR06）'},
+    {c:'tfile',i:'📂',t:'benchmark_score.csv 読み込み中（競合4社 × NV7軸）'},
+    {c:'tcheck',i:'🔍',t:'TR01: EV化 → エンジン音消失 → 後席ロードノイズ・モーター音が浮き上がる'},
+    {c:'tcheck',i:'🔍',t:'TR02: 上級CUVで後席快適性が購買決定要因として上位へ'},
+    {c:'tcheck',i:'🔍',t:'TR03: 軽量化必須（航続距離）→ 遮音材増量では対応不可'},
+    {c:'tscore',i:'📊',t:'競合比較: E:NX2 後席NL高速=6.9 → IONIQ5(8.1)との差が最大。BYD(6.3)より優位。'},
+    {c:'tscore',i:'📊',t:'競合比較: E:NX2 荒れ路NL=5.9 / こもり=6.1 → Tesla(5.6/5.7)より優位'},
+    {c:'tresult',i:'✅',t:'差別化結論: 後席高速路NLでIONIQ5水準(8.0+)を目指す — ここで勝負する'}
+  ],
+  // Step2: コンセプト比較
+  s2: [
+    {c:'tfile',i:'📂',t:'product_concept.yaml 読み込み中（V01〜V05）'},
+    {c:'tfile',i:'📂',t:'市場トレンドとの整合チェック（TR01〜TR06）'},
+    {c:'tcheck',i:'🔍',t:'案A後席特化: V01後席会話性・V02長距離快適性と最も整合'},
+    {c:'tcheck',i:'🔍',t:'案B EV音質: EV特有音は既に競合水準内（TR04）— 差別化ポイント弱い'},
+    {c:'tcheck',i:'🔍',t:'案C走行性能両立: 後席NLが競合に届かない → V01/V02未達リスク大'},
+    {c:'tscore',i:'⚖️',t:'市場差別化力: A>B>C / 商品性整合: A>C>B / 重量制約: C>A>B'},
+    {c:'tresult',i:'✅',t:'推奨: 案A「後席静粛性特化」— V01/V02/V03を開発の軸とする'}
+  ],
+  // Step3: アーキテクチャー比較・リスク予測
+  s3: [
+    {c:'tfile',i:'📂',t:'design_change.csv 読み込み中（DC01〜DC05）'},
+    {c:'tfile',i:'📂',t:'baseline_measurement.csv 読み込み中（前機種実績値）'},
+    {c:'tcheck',i:'🔍',t:'DC01タイヤ低転がり化: 前機種類似2件 → NL最良+1.5/最頻+2.0/最悪+2.5dB（High確度）'},
+    {c:'tcheck',i:'🔍',t:'DC02ブッシュ+20%高剛性化: 振動伝達理論 → こもり最頻+1.5dB / NL最頻+0.7dB（Medium確度）'},
+    {c:'twarn',i:'⚠️',t:'DC03サブフレーム締結変更: 経路変化あり → TPA実施しないと寄与量不明（Low確度）'},
+    {c:'tscore',i:'📊',t:'予測チャート生成: 後席NL予測3.2→2.8 / こもり予測4.1→2.9 → 目標大幅未達'},
+    {c:'tresult',i:'✅',t:'判断: DC01+DC02複合でR02/R03達成困難 → P0前に対策必要 + TPA追加'}
+  ],
+  // Step4: 評価結果読み取り + 官能照合
+  s4: [
+    {c:'tfile',i:'📂',t:'measurement_result.csv 読み込み中（RSLT01〜13）'},
+    {c:'tfile',i:'📂',t:'subjective_comment.md 読み込み中（CMT01〜06）'},
+    {c:'tcheck',i:'🔍',t:'RSLT03 こもり: 56.0dB → 目標52.0dB → 乖離+4.0dB（全13項目中最大）'},
+    {c:'tcheck',i:'🔍',t:'CMT02「頭に響く圧迫感、長距離で疲れそう」→ RSLT03の45Hz帯域と照合 → 完全一致'},
+    {c:'tcheck',i:'🔍',t:'RSLT02 後席NL: 63.2dB → 目標61.0dB → 乖離+2.2dB'},
+    {c:'tcheck',i:'🔍',t:'CMT01「会話に集中しないといけない」→ RSLT02と照合 → 一致'},
+    {c:'twarn',i:'⚠️',t:'CMT05「ヒューンとした音」→ RSLT08 ギヤ音官能25% → NL改善後に顕在化リスク'},
+    {c:'tresult',i:'✅',t:'Step3予測との照合: こもり+4.0dB（予測上限値で出現）/ NL+2.2dB（予測範囲内）'}
+  ],
+  // Step5: スコアリング + 優先順位根拠
+  s5: [
+    {c:'tfile',i:'📂',t:'judgment_rule.yaml 読み込み中（6軸スコアリングルール）'},
+    {c:'tscore',i:'⚖️',t:'ISS01 こもり: 商品性5×5=25 / 乖離5×4=20 / 官能5×4=20 → 主要65pt'},
+    {c:'tscore',i:'⚖️',t:'ISS01 残軸: 再発3×3=9 / 不確3×4=12 / 日程3×2=6 → 合計92pt'},
+    {c:'tscore',i:'⚖️',t:'ISS02 後席NL: 商品性5×5=25 / 乖離4×4=16 / 官能4×4=16 → 合計84pt'},
+    {c:'tcheck',i:'🔍',t:'なぜこもりがNLより上か: 目標乖離+4.0 vs +2.2 × 影響商品性V02/V03 vs V01'},
+    {c:'tresult',i:'✅',t:'ランキング確定: ISS01(92)>ISS02(84)>ISS03(78)>ISS04(75)>ISS05(73)'}
+  ],
+  // Step6: DRBFM + 知見カード生成
+  s6: [
+    {c:'tfile',i:'📂',t:'decision_trace.csv 読み込み中（D001〜D005）'},
+    {c:'tscore',i:'⚖️',t:'DR-001生成: DC01タイヤ → RSLT09新旧比較+2.1dB確認 → High確度'},
+    {c:'tscore',i:'⚖️',t:'DR-002生成: DC02ブッシュ → RSLT11こもり+1.5dB確認 → Medium確度'},
+    {c:'tscore',i:'⚖️',t:'DR-003生成: DC05モーター → RSLT08官能25% → Medium確度'},
+    {c:'tscore',i:'⚖️',t:'KN01〜KN04: タイヤ/ブッシュ/EV音/軽量化の知見パターン抽出'},
+    {c:'tresult',i:'✅',t:'全出力11ファイル生成 → 次シナリオへの知見引き継ぎ準備完了'}
+  ]
+};
+
+// ===== DEMO SCRIPT（デモモード: 段階的対話） =====
+const demoScript = [
+  // ── Step 1: 市場を読む ──────────────────────────────
+  { ms:0,    nav:'step1', type:'sys',  text:'📂 scenario_001 を読み込み中 ... market_trend.yaml / benchmark_score.csv' },
+  { ms:1200, nav:'step1', type:'step', text:'【Step 1】市場を読む ─ この車は何で勝負するか', step:1 },
+  // ①今回の開発が決まった
+  { ms:2600, hl:'viz-trend', nav:'step1', type:'ai',
+    text:'新型EV/HEV Crossoverの開発が、今期の最重要プロジェクトとして正式決定しました。\n\nまず前提となる市場環境を整理します。market_trend.yaml を読み込みました。' },
+  // ②市場トレンドの構造変化
+  { ms:6000, hl:'viz-trend', nav:'step1', type:'ai',
+    text:'EV市場で今、3つの構造変化が同時に起きています：\n\n🔴 TR01: エンジン音が消えた → ロードノイズ・モーター音が相対的に浮き上がる\n🔴 TR02: 上級CUVで「後席快適性」が購買決定要因として急上昇\n🔴 TR03: 航続距離のために軽量化が必須 → 遮音材を増やす余地がない\n\n「遮音材を足せばよい」という従来の発想は、この開発では通用しません。' },
+  // ③競合との比較
+  { ms:11000, hl:'viz-bm', nav:'step1', type:'ai',
+    text:'競合4社を比較しました。スパイダーチャートをご覧ください（10点満点）。\n\nHyundai IONIQ5: 後席NL高速 **8.1** / 荒れ路 **8.5** / こもり **8.5** — 全軸でトップ水準\nTesla Model Y: 後席NL高速 7.8 / 荒れ路 5.6 / こもり 5.7\nBYD Han: 後席NL高速 6.3 / 荒れ路 4.7\n\n自社 E:NX2 設計目標: 後席NL高速 **6.9** / 荒れ路 5.9 / こもり 6.1\n→ IONIQとの差が最大の課題。荒れ路・こもりではTeslaより優位な点に注目。' },
+  // ④差別化の結論
+  { ms:16000, hl:'viz-bm-score', nav:'step1', type:'ai',
+    text:'なお風切り音は E:NX2=8.1 で全競合最下位（Tesla 9.3が最高値）。モーター音も7.2で最下位。高速クルーズ静粛性の弱点でもある。\n\n→ **結論: 後席高速路NLをIONIQ5水準（8.0+）へ。この車はここで勝負します。**\n次は「どういうコンセプトで開発するか」を決めます。' },
+
+  // ── Step 2: コンセプトを決める ─────────────────────
+  { ms:20000, nav:'step2', type:'step', text:'【Step 2】差別化コンセプトを決める ─ 3案を比較する', step:2 },
+  // ①3案の提示
+  { ms:21500, hl:'viz-concept', nav:'step2', type:'ai',
+    text:'「後席静粛性で差別化する」と決まりました。具体的にどのアプローチで開発するか、3つの方向性を比較します。\n\n案A「後席静粛性特化」: 後席NL・こもりにリソースを集中\n案B「EV音質重視」: モーター音・ギヤ音のゼロ化が最優先\n案C「走行性能との両立」: NV対策重量を最小化し操安を維持' },
+  // ②推奨と根拠
+  { ms:26000, hl:'viz-values', nav:'step2', type:'ai',
+    text:'比較軸で評価すると──\n\n市場差別化力: A > B > C（TR02/TR06の要求に最も合うのがA）\nV01/V02との整合: A > C > B（最優先商品性に直結するのがA）\n案B/Cでは後席NLがTesla Model Y水準に届かない\n\n→ **案A「後席静粛性特化」を推奨します。**\nV01後席会話性 / V02長距離快適性 / V03荒れ路上質感 を開発の軸とします。' },
+
+  // ── Step 3: 前機種との違いとリスクを予測する ─────────
+  { ms:30500, nav:'step3', type:'step', text:'【Step 3】前機種との違いとNVリスクを予測する', step:3 },
+  // ①設計変更の概要
+  { ms:32000, hl:'viz-risk', nav:'step3', type:'ai',
+    text:'コンセプトが決まりました。次に「前機種から何が変わるか」を確認します。\n設計変更は5件。全てに性能上のトレードオフがあります。NVリスクを事前に予測します。' },
+  // ②主要リスク2件の深掘り
+  { ms:36000, hl:'viz-risk', nav:'step3', type:'ai',
+    text:'最大リスクは DC01 と DC02 の組み合わせです。\n\n🔴 DC01 タイヤ低転がり化（燃費目的）\n　前機種の類似ケース2件から NL +1.5〜2.5dB 悪化を予測（High確度）\n\n🔴 DC02 リアブッシュ +20%高剛性化（操安目的）\n　高剛性化は振動の伝達経路を太くする。こもり +1〜2dB 悪化予測（Medium確度）' },
+  // ③アーキテクチャーチャートと結論
+  { ms:41000, hl:'viz-arch', nav:'step3', type:'ai',
+    text:'アーキテクチャーチャート（右）の橙線が「設計変更込みの予測値」です。\n後席NL・こもりで目標（青線）を大きく下回っています。\n\n→ DC01+DC02の複合でR02後席NL・R03こもりの目標達成が困難と予測。\n**実測前から対策を立案し、評価計画にTPA（伝達経路解析）を追加してください。**' },
+
+  // ── Step 4: 試作評価結果を読む ─────────────────────
+  { ms:46000, nav:'step4', type:'step', text:'【Step 4】試作評価結果を読む ─ 予測は当たったか', step:4 },
+  // ①試作データ読み込みと大局確認
+  { ms:47500, hl:'viz-eval', nav:'step4', type:'ai',
+    text:'評価結果が出ました。measurement_result.csv を読み込みます。\n\n13項目のうち OK: 9件 / NG: 4件。Step 3で予測した内容と照合します。' },
+  // ②測定値の読み取り
+  { ms:51500, hl:'viz-eval', nav:'step4', type:'ai',
+    text:'🔴 RSLT03 後席こもり: **56.0dB**（目標52.0dB）→ 乖離 **+4.0dB**\n　Step3予測は +1〜4dB でしたが、最大値で出てしまいました\n\n🔴 RSLT02 後席NL: **63.2dB**（目標61.0dB）→ 乖離 **+2.2dB**（予測範囲内）\n\n✅ 風切り音・モーター音・異音 → 目標内（強みは維持できています）' },
+  // ③官能コメントとの照合
+  { ms:56000, hl:'viz-comments', nav:'step4', type:'ai',
+    text:'官能コメントと照合しました。数字は「体験」を語っていました。\n\nCMT02「後席で頭に響くような圧迫感。長距離乗ると疲れそう」\n→ RSLT03（56.0dB / 45Hz帯）と **完全一致**。V02「長距離でも疲れにくい」が未達。\n\nCMT01「後席では会話に集中しないといけない感じ」\n→ RSLT02（後席NL超過）と **一致**。V01「後席でも会話しやすい」が未達。\n\nCMT05「加速でヒューンとした音がスッと出てくる」\n→ ロードNL改善後に更に目立つリスクあり。今から対策が必要。' },
+
+  // ── Step 5: 課題の優先順位を決める ─────────────────
+  { ms:62000, nav:'step5', type:'step', text:'【Step 5】課題の優先順位を決める ─ 感覚ではなく根拠で', step:5 },
+  // ①問題設定
+  { ms:63500, hl:'viz-ranking', nav:'step5', type:'ai',
+    text:'NGが4件出ました。開発リソースは有限です。\n6軸スコアリングで商品性への影響を定量化し、優先順位を決めます。' },
+  // ②スコアリング軸の説明
+  { ms:67000, hl:'viz-ranking', nav:'step5', type:'ai',
+    text:'judgment_rule.yaml の6軸で評価します：\n\n①商品性影響 ×5（最重要）\n②目標乖離 ×4\n③官能一致 ×4\n④再発リスク ×3\n⑤不確実性 ×3\n⑥日程影響 ×2\n\n最大105pt。商品性への影響が最も重い設計です。' },
+  // ③スコア結果
+  { ms:71500, hl:'viz-ranking', nav:'step5', type:'ai',
+    text:'スコアリング結果：\n\n🔴 **ISS01 後席こもり: 92pt → CRITICAL**\n　商品性影響25（V02/V03 の2軸に直撃）+ 乖離20（+4.0dBは全測定中最大）+ 官能一致20\n\n🔴 **ISS02 後席NL: 84pt → CRITICAL**\n　V01「後席会話性」── 最優先商品性を直接損なう\n\n🟠 **ISS03 ギヤ音: 78pt → HIGH**' },
+  // ④「なぜこもりが1位か」の説明
+  { ms:76000, hl:'viz-iss01', nav:'step5', type:'ai',
+    text:'ISS01こもりが1位の根拠を確認します。\n\nこもり: 乖離 **+4.0dB**（全NGの中で最大）× 影響商品性 **V02/V03 の2軸**\n後席NL: 乖離 +2.2dB × 影響商品性 V01 の1軸\n\n乖離の大きさと影響商品性の数を掛け合わせると、**こもりが最優先**になります。' },
+
+  // ── Step 6: DR向けをまとめる ─────────────────────────
+  { ms:81000, nav:'step6', type:'step', text:'【Step 6】DR向けをまとめる ─ 来週のDRで何を説明するか', step:6 },
+  // ①DRに向けた問題整理
+  { ms:82500, hl:'viz-decision', nav:'step6', type:'ai',
+    text:'来週デザインレビューがあります。「どの設計変更が問題か、なぜか、どう対処するか」を根拠付きで説明する必要があります。DRBFMアイテムを自動生成します。' },
+  // ②DRBFMアイテム
+  { ms:86500, hl:'viz-drbfm', nav:'step6', type:'ai',
+    text:'📋 **DR-001 DC01タイヤ低転がり化**\n　問題: 前後席NL +2.1dB（仕様比較で実測確認）\n　確からしさ: **High**（因果確認済み）\n　対策候補: 代替タイヤ探索 / ホイールハウス吸音材 / 燃費チームとの調整\n\n📋 **DR-002 DC02ブッシュ高剛性化**\n　問題: こもり +1.5dB（実測確認）\n　確からしさ: **Medium**（経路は未特定）\n　対策: TPA実施後に操安チームと最適剛性を再協議' },
+  // ③知見カードで次プロジェクトへ
+  { ms:91000, hl:'viz-knowledge', nav:'step6', type:'ai',
+    text:'最後に、今回の知見を次のプロジェクトへ引き継ぎます。\n\n🎓 KN01: 低転がりタイヤはNLを2〜3dB悪化させる傾向。**選定段階で仕様比較必須。**\n🎓 KN02: ブッシュ高剛性化はこもりを悪化させる。TPA予測を先行実施。\n🎓 KN03: EV/HEVではロードNL改善後にギヤ音が浮く。電動系音の管理値を同時設定すること。\n\nこれらは次のシナリオでそのまま活用できます。' },
+  // Done
+  { ms:95000, nav:'step6', type:'done',
+    text:'✅ **Step 1〜6 完了**\n\n使用ファイル: market_trend.yaml / benchmark_score.csv / design_change.csv / measurement_result.csv / subjective_comment.md / judgment_rule.yaml\nデータID: RSLT01-13 / CMT01-06 / DC01-05 / R01-08 / V01-05 / TR01-06\n判断トレース: D001-D005（全件根拠付き）\nDRBFM: DR-001〜003 / 知見カード: KN01〜KN04\n\n各Stepの判断根拠はいつでも遡れます。', step:null },
+];
+
+function startDemo() {
+  cancelAll();
+  demoRunning = true;
+  msgs.innerHTML = '';
+  resetStepDots();
+  const btn = document.getElementById('demoBtn');
+  btn.className = 'demo-btn running';
+  btn.textContent = '▶ デモ実行中...';
+
+  demoScript.forEach((entry, i) => {
+    const t = setTimeout(() => {
+      if (!demoRunning) return;
+      if (entry.nav) navById(entry.nav);
+      if (entry.step) setStepDot(entry.step);
+      if (entry.hl) highlightEl(entry.hl);
+      addMsg(entry.type, entry.text);
+      if (i === demoScript.length - 1) {
+        btn.className = 'demo-btn done';
+        btn.textContent = '↺ リセット';
+        btn.onclick = resetDemo;
+        demoRunning = false;
+      }
+    }, entry.ms);
+    demoTimers.push(t);
+  });
+}
+
+function resetStepDots() { document.querySelectorAll('.step-dot').forEach(d => { d.className = 'step-dot'; }); }
+function setStepDot(n) {
+  for(let j=1;j<=n;j++) document.getElementById('sd'+j).classList.add('done');
+  document.getElementById('sd'+n).classList.add('active');
+}
+
+function resetDemo() {
+  cancelAll();
+  highlightEl(null);
+  swGroups = []; swGroupIdx = 0;
+  msgs.innerHTML = '';
+  resetStepDots();
+  const btn = document.getElementById('demoBtn');
+  btn.className = 'demo-btn ready';
+  if (currentMode === 'real') {
+    btn.textContent = '🤖 Real AI 分析を開始'; btn.onclick = startRealDemo;
+  } else if (currentMode === 'step') {
+    btn.textContent = '⏸ Step別デモを開始'; btn.onclick = startStepwiseDemo;
+  } else {
+    btn.textContent = '▶ シナリオデモを開始'; btn.onclick = startDemo;
+  }
+  navById('step1');
+}
+
+// ===== STEP別モード =====
+
+function groupScriptByStep(script) {
+  const groups = []; let cur = [];
+  for(const e of script) {
+    if(e.type === 'step' && cur.length > 0) { groups.push([...cur]); cur = []; }
+    cur.push(e);
+  }
+  if(cur.length > 0) groups.push(cur);
+  return groups;
+}
+
+function startStepwiseDemo() {
+  cancelAll();
+  swGroups = groupScriptByStep(demoScript);
+  swGroupIdx = 0;
+  swRunning = true;
+  msgs.innerHTML = '';
+  resetStepDots();
+  const btn = document.getElementById('demoBtn');
+  btn.className = 'demo-btn done';
+  btn.textContent = '↺ リセット';
+  btn.onclick = resetDemo;
+  playSwGroup();
+}
+
+function playSwGroup() {
+  if (!swRunning || swGroupIdx >= swGroups.length) return;
+  const entries = swGroups[swGroupIdx].filter(e => e.type !== 'done');
+  let idx = 0;
+
+  function step() {
+    if (!swRunning) return;
+    if (idx >= entries.length) { onGroupDone(); return; }
+    const cur = entries[idx], nxt = entries[idx + 1];
+    idx++;
+    if (cur.nav) navById(cur.nav);
+    if (cur.step) setStepDot(cur.step);
+    if (cur.hl) highlightEl(cur.hl);
+    addMsg(cur.type, cur.text);
+    const delay = nxt ? Math.max(800, nxt.ms - cur.ms) : 500;
+    swTimers.push(setTimeout(idx < entries.length ? step : onGroupDone, delay));
+  }
+
+  function onGroupDone() {
+    if (!swRunning) return;
+    const nextIdx = swGroupIdx + 1;
+    if (nextIdx < swGroups.length) {
+      const nextStep = swGroups[nextIdx].find(e => e.type === 'step');
+      showSwContinueBtn(nextStep ? nextStep.step : nextIdx + 1);
+    } else {
+      const doneEntry = demoScript.find(e => e.type === 'done');
+      if (doneEntry) addMsg('done', doneEntry.text);
+      swRunning = false;
+    }
+  }
+
+  step();
+}
+
+function showSwContinueBtn(nextStepNum) {
+  const d = document.createElement('div');
+  d.id = 'swNextWrap';
+  d.style.padding = '6px 10px';
+  d.innerHTML = `<button class="sw-next-btn" onclick="advanceSwStep()">▶ Step ${nextStepNum} へ進む →</button>`;
+  msgs.appendChild(d);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function advanceSwStep() {
+  swTimers.forEach(t => clearTimeout(t)); swTimers = [];
+  const wrap = document.getElementById('swNextWrap');
+  if (wrap) wrap.remove();
+  swGroupIdx++;
+  swRunning = true;
+  playSwGroup();
+}
+
+// ===== REAL AI MODE (思考プロセス付き) =====
+let realTimers = [];
+function startRealDemo() {
+  cancelAll();
+  demoRunning = true;
+  msgs.innerHTML = '';
+  resetStepDots();
+  const btn = document.getElementById('demoBtn');
+  btn.className = 'demo-btn done'; btn.textContent = '↺ リセット'; btn.onclick = resetDemo;
+
+  // Real AIデモ: 段階的対話 + 思考プロセス可視化
+  const steps = [
+    // ── Step 1: 市場を読む ──
+    { nav:'step1', step:1,
+      user:'新型EV Crossoverの開発がキックオフしました。まず市場環境と競合状況を整理してください。',
+      think:'s1',
+      ai:'**market_trend.yaml + benchmark_score.csv** を分析しました（10点満点・7軸）。\n\nEV市場で3つの構造変化が同時に起きています：\n🔴 TR01: エンジン音消失 → 後席ロードノイズ・モーター音が主戦場に\n🔴 TR02: 上級CUVで後席快適性が購買決定要因として急上昇\n🔴 TR03: 軽量化必須 → 遮音材増量では対応できない\n\nIONIQ5が全軸でトップ水準（後席NL高速8.1 / こもり8.5）。\nE:NX2 後席NL高速=6.9 → IONIQとの差1.2ptが最優先課題。\n荒れ路NL=5.9・こもり=6.1 はTesla(5.6/5.7)より優位。風切り音=8.1 は全競合最下位（要注意）。' },
+    { nav:'step1', step:null,
+      user:'この結果から、この車の差別化ポイントはどこになりますか？',
+      think:null,
+      ai:'**後席高速路NLでIONIQ5水準（8.0+）を超える**ことが最大の市場機会です。\n\nIONIQ5の後席NL高速(8.1)を超えることが具体目標。荒れ路・こもりはTeslaより優位（5.9/6.1 vs 5.6/5.7）なので守り切る。風切り音（8.1）は課題だが後席NLの改善が最優先です。\n\n→ 「後席でも会話しやすい・長距離でも疲れにくい」を体験価値の核に設定します。' },
+
+    // ── Step 2: コンセプトを決める ──
+    { nav:'step2', step:2,
+      user:'後席静粛性で差別化する方向で、NVコンセプトの具体案を3つ出して比較してください。',
+      think:'s2',
+      ai:'3案を比較しました。\n\n案A「後席静粛性特化」: 後席NL・こもりにリソースを集中 → V01/V02に直結\n案B「EV音質重視」: モーター・ギヤ音ゼロ化 → 差別化ポイントが弱い（競合と同水準以上は既達）\n案C「走行性能両立」: 重量最小化 → 後席NLがTesla水準に届かない\n\n→ **案A「後席静粛性特化」を推奨します。**\nV01後席会話性 / V02長距離快適性 / V03荒れ路上質感 を開発の軸とします。' },
+
+    // ── Step 3: 前機種との違いを予測する ──
+    { nav:'step3', step:3,
+      user:'前機種から今回の設計変更は5件あります。NVリスクを事前に予測してください。',
+      think:'s3',
+      ai:'**baseline_measurement.csv × design_change.csv** を照合しました。\n\n最大リスクはDC01とDC02の組み合わせです：\n🔴 DC01タイヤ低転がり化: 類似ケース2件より NL+1.5〜2.5dB悪化予測（High確度）\n🔴 DC02ブッシュ高剛性化: 振動伝達理論より こもり+1〜2dB悪化予測（Medium確度）\n⚠️ DC03サブフレーム: TPA未実施 → 経路変化量が不明（Low確度）' },
+    { nav:'step3', step:null,
+      user:'この予測をもとに評価計画をどう見直すべきですか？',
+      think:null,
+      ai:'DC01+DC02の複合でR02後席NL・R03こもりの目標達成が困難と予測されます。\n\n評価計画への反映：\n① DC03サブフレームのTPA（伝達経路解析）を追加\n② タイヤ新旧仕様比較テスト（TEST07）を最優先で実施\n③ ブッシュ新旧比較（TEST09）でこもり増分を確認\n\n→ 実測前から対策案を並行して検討することを強く推奨します。' },
+
+    // ── Step 4: 試作評価結果を読む ──
+    { nav:'step4', step:4,
+      user:'評価結果が出ました。Step3の予測と照合しながら読み取ってください。',
+      think:'s4',
+      ai:'**measurement_result.csv × subjective_comment.md** を照合しました。\n\n🔴 RSLT03 後席こもり: 56.0dB（目標52.0dB、**乖離+4.0dB**）\n　Step3予測は+1〜4dBでしたが、最大値で出てしまいました\n🔴 RSLT02 後席NL: 63.2dB（目標61.0dB、**乖離+2.2dB**）予測範囲内\n✅ 風切り音・モーター音・異音: 目標内（強みを維持）' },
+    { nav:'step4', step:null,
+      user:'官能コメントと数字はどう対応していますか？',
+      think:null,
+      ai:'官能コメントが数字の「体験的意味」を説明しています：\n\nCMT02「後席で頭に響くような圧迫感。長距離で疲れそう」\n→ RSLT03（56.0dB / 45Hz帯）と**完全一致**。V02「長距離でも疲れにくい」が未達。\n\nCMT01「後席では会話に集中しないといけない感じ」\n→ RSLT02（後席NL超過）と**一致**。V01「後席でも会話しやすい」が未達。\n\nCMT05「加速でヒューンとした音」→ ロードNL改善後に更に目立つリスク大。今から対策が必要。' },
+
+    // ── Step 5: 課題の優先順位を決める ──
+    { nav:'step5', step:5,
+      user:'NGが4件出ました。開発リソースは限られています。課題の優先順位を根拠付きで決めてください。',
+      think:'s5',
+      ai:'**judgment_rule.yaml** の6軸でスコアリングしました。\n\n🔴 **ISS01 後席こもり: 92pt → CRITICAL**\n　商品性影響25（V02/V03の2軸に直撃）+ 目標乖離20（+4.0dBは全13項目中最大）+ 官能完全一致20\n\n🔴 **ISS02 後席NL: 84pt → CRITICAL**\n　V01「後席会話性」── 最優先商品性を直接損なう\n\n🟠 **ISS03 ギヤ音3次: 78pt → HIGH**（NL改善後に顕在化リスク大。今から手を打つ必要あり）' },
+    { nav:'step5', step:null,
+      user:'なぜロードノイズよりこもりが1位なのか、説明してもらえますか？',
+      think:null,
+      ai:'「こもりの方がうるさくない」のに1位になる理由を説明します。\n\nこもり（ISS01）: 乖離+4.0dB × **V02/V03の2つの商品性**に影響\n後席NL（ISS02）: 乖離+2.2dB × **V01の1つの商品性**に影響\n\n商品性影響軸（×5）の重みが最大なので、2商品性に跨るこもりが上に来ます。\n「音が大きい」という印象だけでロードNLを最優先にするのは、この車では正しくありません。\n**数字と商品性の重みを掛け合わせると、こもりが先です。**' },
+
+    // ── Step 6: DR向けをまとめる ──
+    { nav:'step6', step:6,
+      user:'来週DRがあります。DRBFMと判断メモ、知見カードを生成してください。',
+      think:'s6',
+      ai:'**DR提出用アウトプット**を生成しました。\n\n📋 DR-001 DC01タイヤ: 前後席NL+2.1dB（High確度 / 仕様比較で因果確認済み）\n　対策候補: 代替タイヤ探索 / ホイールハウス吸音材 / 燃費チームとの調整\n\n📋 DR-002 DC02ブッシュ: こもり+1.5dB（Medium確度 / 経路未特定）\n　対策: TPA実施後に操安チームと最適剛性を再協議\n\n📋 DR-003 DC05モーター: ギヤ音官能25%（Medium確度）' },
+    { nav:'step6', step:null,
+      user:'この開発で得た知見を次のプロジェクトに引き継ぐには？',
+      think:null,
+      ai:'知見カード KN01〜KN04 を生成しました。次のシナリオでそのまま活用できます。\n\n🎓 **KN01**: 低転がりタイヤはNLを2〜3dB悪化させる傾向。**選定段階で仕様比較必須。**\n🎓 **KN02**: ブッシュ高剛性化はこもりを悪化させる。TPA予測を先行実施すること。\n🎓 **KN03**: EV/HEVではロードNL改善後にギヤ音が浮く。電動系音の管理値を同時設定。\n🎓 **KN04**: 遮音材-100g/m²でNLが0.5〜1.0dB悪化。軽量化対策と源流対策をセットで。\n\n全11ファイルを05_output/に保存。次シナリオへ引き継ぎ準備完了。' },
+  ];
+
+  let cursor = 0;
+  function runNext() {
+    if(cursor >= steps.length) {
+      addMsg('done','✅ **Real AI 分析 全Step完了**\n\n使用データ: RSLT01-13 / CMT01-06 / DC01-05 / R01-08 / V01-05\n判断トレース: D001-D005（すべて根拠付き）\nDRBFM: DR-001〜003 / 知見カード: KN01〜KN04\n\n質問があればどうぞ。');
+      btn.className='demo-btn done'; btn.textContent='↺ リセット'; btn.onclick=resetDemo; demoRunning=false;
+      return;
+    }
+    const s = steps[cursor++];
+    if(s.step) setStepDot(s.step);
+    if(s.nav) navById(s.nav);
+    addMsg('user', s.user);
+
+    if(s.think) {
+      // Real AIモード: ローディング → 思考 → 回答
+      const loadEl = addLoadingMsg();
+      setTimeout(()=>{
+        loadEl.remove();
+        const tk = addThinkMsg(thinkSteps[s.think]);
+        setTimeout(()=>{ addMsg('ai', s.ai); msgs.scrollTop=msgs.scrollHeight; runNext(); }, tk.duration + 600);
+      }, 1200);
+    } else {
+      setTimeout(()=>{ addMsg('ai', s.ai); msgs.scrollTop=msgs.scrollHeight; setTimeout(runNext, 800); }, 600);
+    }
+  }
+  runNext();
+}
+
+// ===== Q&A =====
+const qa = [
+  { re:/最優先|critical|緊急|一番/, nav:'step5', hl:'viz-iss01', text:'最優先課題（CRITICAL）は2件です。\n\n🔴 **ISS01** 後席低周波こもり: 92pt\n・RSLT03: 56.0dB ／ 目標比 +4.0dB\n・CMT02 圧迫感コメントと完全一致\n・影響: V02長距離快適性 / V03荒れ路上質感\n\n🔴 **ISS02** 後席ロードノイズ: 84pt\n・RSLT02: 63.2dB ／ 目標比 +2.2dB\n・CMT01 会話困難コメントと一致\n・影響: V01後席会話性（最優先商品性）' },
+  { re:/タイヤ|DC01/, nav:'trace', hl:'viz-risk', text:'DC01タイヤ変更の影響（判断D005）:\n\n**RSLT09** タイヤ新旧仕様比較で前席NL **+2.1dB悪化**確認。\nこれはISS04前席NL超過（+1.5dB）の大部分を説明できます。\n\n確からしさ: **High**（仕様比較で因果関係確認済み）\n\n対策候補:\n・低転がり要求を満たしつつNVを改善できる代替タイヤの探索\n・ホイールハウス吸音材の追加\n・燃費チームとのトレードオフ整理が必要' },
+  { re:/ブッシュ|DC02/, nav:'trace', hl:'viz-risk', text:'DC02リアブッシュ高剛性化の影響（判断D004）:\n\n**RSLT10**: 後席NL +0.8dB悪化（新旧比較）\n**RSLT11**: 低周波こもり +1.5dB悪化（新旧比較）\n\n確からしさ: **Medium**（仕様比較で悪化確認済み、伝達経路は未特定）\n\n⚠️ 注意: 操安向上（DC02の変更理由）とのトレードオフがあるため、一律戻しは不可。\nTPA実施後に操安チームと最適剛性を再協議する必要があります。' },
+  { re:/こもり|ISS01|低周波/, nav:'evidence', hl:'viz-iss01', text:'後席低周波こもり（ISS01）の詳細:\n\n**測定**: RSLT03 → 56.0dB(A)（45Hz付近、目標比+4.0dB、最大乖離）\n**官能**: CMT02 → 「頭に響く圧迫感、長距離で疲れそう」\n**一致度**: 完全一致 → 官能一致スコア=5（最大）\n\n**原因仮説**: DC01タイヤ+DC02ブッシュ+DC03サブフレームの複合寄与（TPA未実施で経路未特定）\n\n→ Evidence Map画面で一本線のつながりを確認できます。' },
+  { re:/ギヤ|ギア|ISS03|DC05|モーター音/, nav:'step5', hl:'viz-ranking',text:'ギヤ音3次成分（ISS03）: **78pt HIGH**\n\n**RSLT08**: 官能「気になる」25%（目標0%超過）\n**CMT05**: 「ヒューンとした音がスッと出てくる」\n\n⚠️ 重要: **ロードNLが改善されると、このギヤ音が相対的にさらに目立つリスクがあります。**\n今の段階から対策を開始しないと、ロードNL対策後に新たな問題になる可能性があります。\n\n次アクション: 次数分析で3次成分特定 → DC05新型モーターの電磁力解析' },
+  { re:/次|追加検証|アクション|what next/, nav:'step6', hl:'viz-drbfm',text:'今後の優先アクション:\n\n1️⃣ **TPA実施**（伝達経路解析）\n   → こもり音の経路別寄与を特定\n\n2️⃣ **タイヤ再選定検討**\n   → 低転がり要求を満たす代替銘柄を探索\n   → 燃費チームとの調整が必要\n\n3️⃣ **次数分析（ギヤ音）**\n   → 3次成分の特定とDC05モーターとの因果確認\n\n4️⃣ **ブッシュ剛性最適化**\n   → TPA結果待ち → 操安チームと再協議\n\n→ 判断メモ・DRBFM画面で詳細を確認できます。' },
+  { re:/トレース|根拠|evidence/, nav:'trace', text:'判断トレース（decision_trace.csv）について:\n\nこのワークベンチでは、各判断に対して以下を記録します:\n\n・使用した入力ファイル\n・使用した具体データID（RSLT03, CMT02 など）\n・使用した判断軸（6軸スコアリング）\n・紐づく商品性・シーン・NV要求\n・根拠（具体的な数値・コメント）\n・確からしさ（High/Medium/Low）\n・次に必要な確認\n\n→ 判断トレース画面で各判断（D001〜D005）を確認できます。' },
+  { re:/DRBFM|DR項目|ドライブ/, nav:'step6', hl:'viz-drbfm',text:'DRBFMアイテム（3件）:\n\n📋 **DR-001**: DC01タイヤ低転がり化\n   → 前後席NL悪化リスク（+2.1dB確認）\n   → 確からしさ: High\n\n📋 **DR-002**: DC02ブッシュ高剛性化\n   → こもり悪化リスク（+1.5dB確認）\n   → 確からしさ: Medium\n\n📋 **DR-003**: DC05新型モーター採用\n   → ギヤ音顕在化リスク（官能25%確認）\n   → 確からしさ: Medium\n\n→ 判断メモ・DRBFM画面で全詳細を確認できます。' },
+  { re:/知見|KN|ナレッジ/, nav:'step6', hl:'viz-knowledge',text:'知見カード（KN01〜KN04）:\n\n🎓 **KN01**: 低転がりタイヤはNLを2〜3dB悪化させる傾向。選定段階で仕様比較を必ず実施。（High確度）\n\n🎓 **KN02**: 操安目的のブッシュ高剛性化は低周波こもりを悪化させる。TPA予測を先行実施。（Medium確度）\n\n🎓 **KN03**: EV/HEVではロードNL改善後にギヤ音・モーター音が浮く。電動系音の管理値を同時に設定。（High確度）\n\n🎓 **KN04**: 遮音材-100g/m²でNLが0.5〜1.0dB悪化。軽量化と同等の源流・経路対策を確保。（Medium確度）' },
+  { re:/商品性|価値|V0/, nav:'step2', hl:'viz-values',text:'主力商品性価値（scenario_001）:\n\n🥇 **V01** 後席でも会話しやすい（最優先）\n   → 高速・粗粒路で普通の声量で会話できる\n   → ISS02後席NLが未達 ⚠️\n\n🥈 **V02** 長距離でも疲れにくい\n   → ISS01こもり音が未達 ⚠️\n\n🥉 **V03** 荒れた路面でも上質に感じる\n   → ISS01こもり + ISS05ハーシュネスが未達 ⚠️\n\n→ 市場・商品性画面で全詳細を確認できます。' },
+];
+
+// ===== VISUALIZATION HIGHLIGHT =====
+function highlightEl(id) {
+  document.querySelectorAll('.viz-hl').forEach(el => el.classList.remove('viz-hl'));
+  if (!id) return;
+  const el = document.getElementById(id);
+  if (el) {
+    el.classList.add('viz-hl');
+    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+
+function askQ(q) {
+  addMsg('user', q);
+  const match = qa.find(r => r.re.test(q));
+  const response = match ? match.text : '申し訳ありません、その質問にはデータが見つかりませんでした。\n以下の質問をお試しください:\n・最優先課題は？\n・タイヤ変更の影響は？\n・次に必要な検証は？';
+  const nav_id = match ? match.nav : null;
+  const hl_id = match ? match.hl : null;
+
+  if(currentMode === 'real') {
+    const loadEl = addLoadingMsg();
+    const quickThink = [
+      {c:'tfile',i:'📂',t:'scenario_001 データ参照中...'},
+      {c:'tcheck',i:'🔍',t:`"${q}" を解析中...`},
+      {c:'tresult',i:'✅',t:'関連データを特定しました'}
+    ];
+    setTimeout(()=>{
+      loadEl.remove();
+      const tk = addThinkMsg(quickThink);
+      setTimeout(()=>{
+        if(nav_id) navById(nav_id);
+        if(hl_id) highlightEl(hl_id);
+        addMsg('ai', response);
+        msgs.scrollTop = msgs.scrollHeight;
+      }, tk.duration + 400);
+    }, 900);
+  } else {
+    setTimeout(()=>{
+      if(nav_id) navById(nav_id);
+      if(hl_id) highlightEl(hl_id);
+      addMsg('ai', response);
+    }, 350);
+  }
+}
+
+function sendChat() {
+  const input = document.getElementById('chatInput');
+  const q = input.value.trim();
+  if (!q) return;
+  input.value = '';
+  askQ(q);
+}
+
+// ===== SCENARIO SWITCH =====
+function switchScenario(n, btn) {
+  document.querySelectorAll('.scn-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (n === 1) {
+    document.getElementById('hdrScn').textContent = '📁 scenario_001: Premium EV/HEV Crossover';
+    addMsg('ai', '**scenario_001** に切り替えました。\nPremium EV/HEV Crossover のNVデータを表示しています。\n\n最優先課題: ISS01後席こもり(92pt) / ISS02後席NL(84pt)');
+  } else if (n === 2) {
+    document.getElementById('hdrScn').textContent = '📁 scenario_002: Sporty Sedan（準備中）';
+    addMsg('sys', '⚠️ scenario_002（Sporty Sedan）はデータ未投入です。\n\n想定シナリオ:\n・走行性能と音質の両立\n・加速音 / ロードノイズ / ハーシュネス\n・操安とのトレードオフ\n\nscenario_001と同じワークベンチ構造で実行可能です。');
+  } else if (n === 3) {
+    document.getElementById('hdrScn').textContent = '📁 scenario_003: Family Minivan（準備中）';
+    addMsg('sys', '⚠️ scenario_003（Family Minivan）はデータ未投入です。\n\n想定シナリオ:\n・後席快適性と会話性\n・低周波こもり / ロードノイズ / 空調音\n・車室内会話性\n\nscenario_001と同じワークベンチ構造で実行可能です。');
+  }
+}
+
+// initial message
+addMsg('ai', '新型EV/HEV Crossoverの開発、一緒に進めましょう。\n\n今日のゴールは**「この車は何で勝負するか」**を明確にすること。競合4社のNVデータを並べてみると、自社の強みと弱みがすぐわかります。\n\n**6つのステップで進めます：**\n1. 📡 市場と競合を読む（今ここ）\n2. 🎯 差別化コンセプトを決める\n3. 🔬 前機種との違いとリスクを予測する\n4. 📊 試作評価結果を読む\n5. 🏆 課題の優先順位を決める\n6. 📝 DR向けをまとめる\n\n各Stepで判断ポイントがあり、そこで会話できます。まず Step 1 のベンチマーク分析から始めましょう。');
+// hdr-top flex fix
+document.querySelector('.hdr').style.display='flex';
+
+// ===== ツールチップエンジン =====
+const tipEl = document.createElement('div');
+tipEl.className = 'tip-pop';
+document.body.appendChild(tipEl);
+let tipTarget = null;
+document.addEventListener('mouseover', e => {
+  const t = e.target.closest('[data-tip]');
+  if(!t) return;
+  tipTarget = t;
+  tipEl.innerHTML = t.getAttribute('data-tip');
+  tipEl.classList.add('vis');
+});
+document.addEventListener('mousemove', e => {
+  if(!tipEl.classList.contains('vis')) return;
+  const x = e.clientX + 14, y = e.clientY + 12;
+  const pw = tipEl.offsetWidth || 250;
+  const ph = tipEl.offsetHeight || 80;
+  tipEl.style.left = Math.min(x, window.innerWidth - pw - 8) + 'px';
+  tipEl.style.top = Math.min(y, window.innerHeight - ph - 8) + 'px';
+});
+document.addEventListener('mouseout', e => {
+  if(tipTarget && !tipTarget.contains(e.relatedTarget)) {
+    tipEl.classList.remove('vis');
+    tipTarget = null;
+  }
+});
+
+// ===== 情報ボックス開閉 =====
+function toggleInfo(id) {
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.classList.toggle('open');
+  // 親のinfo-toggleのテキストを更新
+  const btn = el.previousElementSibling;
+  if(btn && btn.classList.contains('info-toggle')) {
+    btn.textContent = el.classList.contains('open') ? '📖 閉じる' : '📖 読み方';
+  }
+}
+
+// ===== Chart.js スパイダーチャート初期化 =====
+const radarDefaults = {
+  type:'radar',
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    plugins:{legend:{display:false}},
+    scales:{r:{
+      min:0,max:5,ticks:{stepSize:1,font:{size:8},color:'#94a3b8'},
+      pointLabels:{font:{size:9},color:'#64748b'},
+      grid:{color:'#e2e8f0'},angleLines:{color:'#e2e8f0'}
+    }}
+  }
+};
+
+// Step1: ベンチマークレーダー（1-10スケール・7軸）
+const benchCtx = document.getElementById('benchmarkRadar');
+if(benchCtx) {
+  new Chart(benchCtx, {
+    type:'radar',
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{r:{
+        min:0,max:10,ticks:{stepSize:2,font:{size:8},color:'#94a3b8'},
+        pointLabels:{font:{size:9},color:'#64748b'},
+        grid:{color:'#e2e8f0'},angleLines:{color:'#e2e8f0'}
+      }}
+    },
+    data:{
+      labels:['前席NL','後席NL\n（高速路）','後席NL\n（荒れ路）','低周波\nこもり','風切り音','モーター\nギヤ音','ハーシュネス'],
+      datasets:[
+        {label:'Honda E:NX1（前機種実績）',data:[7.6,6.9,5.9,6.1,8.1,7.2,6.8],
+         borderColor:'#4a9eff',backgroundColor:'rgba(74,158,255,.15)',borderWidth:2,pointRadius:3,pointBackgroundColor:'#4a9eff'},
+        {label:'Tesla Model Y',data:[8.9,7.8,5.6,5.7,9.3,8.3,6.2],
+         borderColor:'#f97316',backgroundColor:'rgba(249,115,22,.1)',borderWidth:2,pointRadius:3,pointBackgroundColor:'#f97316'},
+        {label:'BYD Han',data:[8.0,6.3,4.7,4.6,8.6,8.0,7.4],
+         borderColor:'#a78bfa',backgroundColor:'rgba(167,139,250,.1)',borderWidth:2,pointRadius:3,pointBackgroundColor:'#a78bfa'},
+        {label:'Hyundai IONIQ 5',data:[8.3,8.1,8.5,8.5,8.7,8.2,9.2],
+         borderColor:'#34d399',backgroundColor:'rgba(52,211,153,.1)',borderWidth:2,pointRadius:3,pointBackgroundColor:'#34d399'},
+      ]
+    }
+  });
+}
+
+// Step3: アーキテクチャー比較レーダー
+const archCtx = document.getElementById('archRadar');
+if(archCtx) {
+  new Chart(archCtx, {
+    ...radarDefaults,
+    data:{
+      labels:['前席NL','後席NL','低周波\nこもり','ハーシュネス','モーター\nギヤ音','風切り音'],
+      datasets:[
+        {label:'前機種ベース実績',data:[4.2,4.0,4.1,4.0,4.2,4.0],
+         borderColor:'#94a3b8',backgroundColor:'rgba(148,163,184,.12)',borderWidth:2,pointRadius:3,pointBackgroundColor:'#94a3b8',borderDash:[4,3]},
+        {label:'E:NX2 目標値',data:[4.5,4.3,4.5,4.0,4.2,4.3],
+         borderColor:'#4a9eff',backgroundColor:'rgba(74,158,255,.12)',borderWidth:2,pointRadius:3,pointBackgroundColor:'#4a9eff'},
+        {label:'設計変更込み予測値',data:[3.6,3.2,2.9,3.2,3.7,4.2],
+         borderColor:'#f97316',backgroundColor:'rgba(249,115,22,.15)',borderWidth:2,pointRadius:3,pointBackgroundColor:'#f97316'},
+      ]
+    }
+  });
+}
+</script>
+</body>
+</html>
