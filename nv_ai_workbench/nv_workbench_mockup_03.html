@@ -700,6 +700,56 @@ tr:hover td{background:#f7fafc}
       </div>
     </div>
   </div>
+  <!-- Step 2: NV予測比較レーダーチャート（②追加） -->
+  <div class="card" id="viz-concept-radar">
+    <div class="ctitle">📡 3案のNV予測比較 — コンセプト選択でNV7軸がどう動くか <span data-tip="<b>この図の見方</b><br>灰色塗りつぶし = E:NX1実績（現在の出発点）<br>緑の点線 = IONIQ5水準（超えるべきベンチマーク）<br>色付き実線 = 各案を選んだ場合のE:NX2予測値<br>実線が灰色より<b>外側 = 改善</b> / 内側 = リスク・悪化<br><i>予測値はStep 1競合分析・DC影響量（最頻値）・NV要求からAIが試算。Step 4の実測で検証します。</i>">❓</span></div>
+    <div style="margin-bottom:12px;padding:9px 12px;background:#f0f4f8;border-left:3px solid var(--acc);border-radius:0 4px 4px 0;font-size:10px;line-height:1.9;color:var(--t1)">
+      Step 1で把握したNV7軸の現状（E:NX1/灰色）に対して、3案それぞれを選んだ場合のE:NX2予測値を重ねています。緑の点線がIONIQ5水準（超えるべき競合ベンチマーク）です。案Aは後席系3軸が大きく伸びますが、DC02（ブッシュ高剛性化）の副作用でハーシュネスにリスクがあります。「コンセプトの選択がNV全体にどう波及するか」の確認として使います。
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:12px">
+      <!-- 案A -->
+      <div style="border:2px solid var(--acc);border-radius:8px;padding:10px;background:var(--blubg)">
+        <div style="font-size:10px;font-weight:700;color:var(--acc);margin-bottom:6px;text-align:center"><span class="bdg I">案A ★AI推奨</span> 後席静粛性特化</div>
+        <div style="position:relative;height:200px"><canvas id="radarConceptA"></canvas></div>
+        <div style="margin-top:8px;font-size:9px;line-height:1.8">
+          <div style="color:var(--grn);font-weight:600;margin-bottom:2px">↑ 改善見込み</div>
+          <div style="color:var(--t1)">後席NL高速路 6.9→<b>8.0</b>（+1.1pt）<br>後席NL荒れ路 5.9→<b>7.5</b>（+1.6pt）<br>低周波こもり 6.1→<b>7.8</b>（+1.7pt）</div>
+          <div style="color:var(--red);font-weight:600;margin-top:6px;margin-bottom:2px">⚠️ リスク</div>
+          <div style="color:var(--t1)">ハーシュネス 6.8→<b>6.5</b>（DC02ブッシュ剛性化の副作用）<br><span style="color:var(--t3)">→ Step 3のリスク予測で詳細確認</span></div>
+        </div>
+      </div>
+      <!-- 案B -->
+      <div style="border:1px solid var(--bdr);border-radius:8px;padding:10px">
+        <div style="font-size:10px;font-weight:700;color:var(--t2);margin-bottom:6px;text-align:center"><span class="bdg M">案B</span> EV静粛性重視</div>
+        <div style="position:relative;height:200px"><canvas id="radarConceptB"></canvas></div>
+        <div style="margin-top:8px;font-size:9px;line-height:1.8">
+          <div style="color:var(--grn);font-weight:600;margin-bottom:2px">↑ 改善見込み</div>
+          <div style="color:var(--t1)">モーター/ギヤ音 7.2→<b>9.0</b>（+1.8pt）</div>
+          <div style="color:var(--red);font-weight:600;margin-top:6px;margin-bottom:2px">⚠️ リスク</div>
+          <div style="color:var(--t1)">後席NL高速路 6.9→7.2（+0.3ptのみ）<br>IONIQ5との差 <b>0.9pt残存</b><br>購買決定軸TR02が未解決のまま</div>
+        </div>
+      </div>
+      <!-- 案C -->
+      <div style="border:1px solid var(--bdr);border-radius:8px;padding:10px">
+        <div style="font-size:10px;font-weight:700;color:var(--t2);margin-bottom:6px;text-align:center"><span class="bdg L">案C</span> 走行性能との両立</div>
+        <div style="position:relative;height:200px"><canvas id="radarConceptC"></canvas></div>
+        <div style="margin-top:8px;font-size:9px;line-height:1.8">
+          <div style="color:var(--grn);font-weight:600;margin-bottom:2px">↑ 改善見込み</div>
+          <div style="color:var(--t1)">全軸で小幅改善（最大+0.4pt）<br>ハーシュネス 6.8→<b>7.2</b>（軽量重視で維持）</div>
+          <div style="color:var(--red);font-weight:600;margin-top:6px;margin-bottom:2px">⚠️ リスク</div>
+          <div style="color:var(--t1)">後席NL高速路 6.9→7.2<br>IONIQ5との差 <b>0.9pt残存</b><br>全7軸でIONIQ5水準に届かない</div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;gap:16px;font-size:9px;padding:6px 10px;background:#f8fafc;border-radius:4px;border:1px solid var(--bdr);flex-wrap:wrap;align-items:center">
+      <span style="display:flex;align-items:center;gap:5px"><span style="width:20px;height:10px;background:rgba(148,163,184,.4);display:inline-block;border-radius:2px"></span>灰色 = E:NX1実績（出発点）</span>
+      <span style="display:flex;align-items:center;gap:5px"><span style="width:20px;height:0;border-top:2px dashed #34d399;display:inline-block"></span>緑点線 = IONIQ5水準（ベンチマーク）</span>
+      <span style="display:flex;align-items:center;gap:5px"><span style="width:20px;height:3px;background:#4a9eff;display:inline-block;border-radius:2px"></span>青 = 案A予測</span>
+      <span style="display:flex;align-items:center;gap:5px"><span style="width:20px;height:3px;background:#f59e0b;display:inline-block;border-radius:2px"></span>橙 = 案B予測</span>
+      <span style="display:flex;align-items:center;gap:5px"><span style="width:20px;height:3px;background:#10b981;display:inline-block;border-radius:2px"></span>緑 = 案C予測</span>
+    </div>
+  </div>
+
   <div style="margin-top:10px;padding:9px 12px;background:#f0f4f8;border-left:3px solid var(--acc);border-radius:0 4px 4px 0;font-size:10px;line-height:1.9;color:var(--t1)">
     Step 1で「後席高速路ノイズでIONIQ5水準に到達することが最大の差別化機会」と特定しました。ただし「後席NVを改善する」といっても、開発リソースの配分の仕方は複数あります。案Bはモーター音など電動系音質を最優先としますが、電動系は既に競合水準内であり差別化効果が薄くなります。案CはNV対策重量を最小化しますが、後席ノイズの目標値が競合に届きません。市場トレンド（TR02：後席快適性が購買決定を左右する）と最優先商品性（V01：後席でも会話しやすい / V02：長距離でも疲れにくい）の両方に最も直結するのが案Aです。<b>→ 案A「後席静粛性特化」を採用。この判断がStep 3以降のNV要求・評価・課題優先順位の基準になります。</b>
   </div>
@@ -2443,6 +2493,34 @@ if(domainCtx) {
     }
   });
 }
+
+// Step2: コンセプト比較レーダーチャート（3案のNV予測）
+(function(){
+  const axes=['前席NL\n（高速）','後席NL\n（高速）','後席NL\n（荒れ路）','低周波\nこもり','風切り音','モーター\nギヤ音','ハーシュ\nネス'];
+  const enx1=[7.6,6.9,5.9,6.1,8.1,7.2,6.8];
+  const iq5=[8.3,8.1,8.5,8.5,8.7,8.2,9.2];
+  const opts={
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false}},
+    scales:{r:{min:4,max:10,
+      ticks:{stepSize:2,font:{size:7},color:'#94a3b8',backdropColor:'transparent'},
+      pointLabels:{font:{size:7},color:'#64748b'},
+      grid:{color:'#e2e8f0'},angleLines:{color:'#e2e8f0'}
+    }}
+  };
+  function mkConceptRadar(id,proj,color,bg){
+    const c=document.getElementById(id);
+    if(!c)return;
+    new Chart(c,{type:'radar',options:opts,data:{labels:axes,datasets:[
+      {data:enx1,borderColor:'#94a3b8',backgroundColor:'rgba(148,163,184,.2)',borderWidth:1.5,pointRadius:2,pointBackgroundColor:'#94a3b8'},
+      {data:iq5,borderColor:'#34d399',backgroundColor:'rgba(0,0,0,0)',borderWidth:1.5,borderDash:[4,3],pointRadius:2,pointBackgroundColor:'#34d399'},
+      {data:proj,borderColor:color,backgroundColor:bg,borderWidth:2.5,pointRadius:3,pointBackgroundColor:color}
+    ]}});
+  }
+  mkConceptRadar('radarConceptA',[8.0,8.0,7.5,7.8,8.1,7.5,6.5],'#4a9eff','rgba(74,158,255,.18)');
+  mkConceptRadar('radarConceptB',[7.8,7.2,6.2,6.4,8.1,9.0,7.0],'#f59e0b','rgba(245,158,11,.18)');
+  mkConceptRadar('radarConceptC',[7.8,7.2,6.2,6.3,8.3,7.5,7.2],'#10b981','rgba(16,185,129,.18)');
+})();
 
 // Step3: Pareto Front
 const paretoCtx = document.getElementById('paretoChart');
