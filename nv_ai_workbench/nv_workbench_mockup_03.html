@@ -263,6 +263,12 @@ tr:hover td{background:#f7fafc}
 .score-fill.high{background:linear-gradient(to right,#fcd34d,var(--ora))}
 .score-mark{position:absolute;top:-2px;bottom:-2px;width:1px;background:#94a3b8}
 .score-mark::after{content:attr(data-v);position:absolute;top:-13px;left:50%;transform:translateX(-50%);font-size:8px;color:var(--t2);white-space:nowrap}
+/* ===== フェーズバー ===== */
+.ctx-phasebar{display:flex;align-items:center;gap:3px;margin-top:7px;flex-wrap:wrap}
+.cp{font-size:8px;padding:2px 7px;border-radius:3px;color:#3a5070;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);white-space:nowrap}
+.cp.done{color:#4ade80;border-color:rgba(74,222,128,.25);background:rgba(74,222,128,.06)}
+.cp.active{color:#4a9eff;border-color:rgba(74,158,255,.45);background:rgba(74,158,255,.14);font-weight:700}
+.cp-sep{color:#2d3748;font-size:9px;margin:0 1px}
 /* ===== Stepインプットバー ===== */
 .step-io{display:flex;align-items:center;gap:6px;padding:5px 12px;background:rgba(74,158,255,.04);border-bottom:1px solid rgba(74,158,255,.12);font-size:9px;color:#5a7090;flex-wrap:wrap;margin-bottom:8px;border-radius:4px}
 .io-label{font-weight:700;color:var(--blu);white-space:nowrap}
@@ -328,17 +334,19 @@ tr:hover td{background:#f7fafc}
 <!-- ========== SIDEBAR ========== -->
 <nav class="sb">
   <div class="sb-sec">AI開発ステップ（V字）</div>
-  <a onclick="nav('step0',this)">🌐 Step 0: 全体商品性を読む</a>
-  <a class="active" onclick="nav('step1',this)">📡 Step 1: NV軸を特定する</a>
-  <a onclick="nav('step2',this)">🎯 Step 2: NVコンセプトを決める</a>
-  <a onclick="nav('step3',this)">🔬 Step 3: 設計変更リスクを予測する</a>
-  <a onclick="nav('step4',this)">📊 Step 4: 予測と実測を照合する</a>
-  <a onclick="nav('step5',this)">🏆 Step 5: NV全体の成立性を確認する</a>
-  <a onclick="nav('step6',this)">📝 Step 6: 商品性全体への成立性を確認する</a>
+  <a onclick="nav('step0',this)">🌐 Step 0: 市場・商品性分析</a>
+  <a class="active" onclick="nav('step1',this)">📡 Step 1: NV性能ベンチマーク</a>
+  <a onclick="nav('step2',this)">🎯 Step 2: 目標設定・コンセプト決定</a>
+  <a onclick="nav('step3',this)">🔬 Step 3: アーキ設計・計画立案</a>
+  <a onclick="nav('step4',this)">📊 Step 4: 評価・検証</a>
+  <a onclick="nav('step5',this)">🏆 Step 5: 成立性確認</a>
+  <a onclick="nav('step6',this)">📝 Step 6: 方針判断・引き継ぎ</a>
   <div class="sb-sec">AI透明性</div>
   <a onclick="nav('trace',this)">🔍 判断トレース</a>
   <a onclick="nav('evidence',this)">🗺 Evidence Map</a>
   <a onclick="nav('flow',this)">🔄 基本導線</a>
+  <div class="sb-sec">参照</div>
+  <a onclick="nav('framework',this)">📋 開発フレームワーク</a>
 </nav>
 
 <!-- ========== CONTENT ========== -->
@@ -349,10 +357,18 @@ tr:hover td{background:#f7fafc}
   <div class="ctx-banner">
     <div class="ctx-step">Step 0</div>
     <div class="ctx-body">
-      <div class="ctx-title">全体商品性からNVへ入る</div>
-      <div class="ctx-desc">競合と自社を「NVだけ」で比べる前に、車両全体の商品性での立ち位置を確認する。「HyundaiがNVで強い」は「Hyundaiが総合で最強」ではない。どの軸で差別化できるかを全体像から定める。</div>
+      <div class="ctx-title">全体商品性ベンチマークでNVの役割と投資優先度を把握する</div>
+      <div class="ctx-desc">競合と自社の全体商品性を比較し、NVドメインへの集中が戦略的に有効かを確認します。この視点なしにNV性能の改善を語っても、全体商品性への貢献を説明できません。</div>
+      <div class="ctx-phasebar">
+        <span class="cp active">市場分析</span><span class="cp-sep">›</span>
+        <span class="cp">目標設定</span><span class="cp-sep">›</span>
+        <span class="cp">アーキ設定・計画</span><span class="cp-sep">›</span>
+        <span class="cp">評価・検証</span><span class="cp-sep">›</span>
+        <span class="cp">成立確認</span><span class="cp-sep">›</span>
+        <span class="cp">方針判断</span>
+      </div>
     </div>
-    <div class="ctx-q">この車はどの軸で勝負できるか？</div>
+    <div class="ctx-q">NVへの集中投資を正当化できるか？</div>
   </div>
   <div class="step-io"><span class="io-label">📂 参照データ:</span><span class="io-file">overall_benchmark_score.csv</span><span class="io-file">attribute_tree.csv</span><span class="io-file">weight_profiles.csv</span><span class="io-arrow">→</span><span class="io-out">全体商品性での立ち位置・NVドメインへの集中根拠</span></div>
   <div class="cpb">
@@ -428,15 +444,23 @@ tr:hover td{background:#f7fafc}
   </div>
 </div>
 
-<!-- ========== STEP 1: 市場を読む ========== -->
+<!-- ========== STEP 1: NV競合差を7軸で把握する ========== -->
 <div id="step1" class="sec on">
   <div class="ctx-banner">
     <div class="ctx-step">Step 1</div>
     <div class="ctx-body">
-      <div class="ctx-title">NVドメインに入る — 競合との差を7軸で確認する</div>
-      <div class="ctx-desc">競合4社と自社の NV性能をベンチマーク。「どこで差別化できるか」を明らかにする。</div>
+      <div class="ctx-title">NV性能の差分をベンチマークし、差別化軸を絞り込む</div>
+      <div class="ctx-desc">NV性能を競合と複数軸で比較し、自社の優位軸・劣位軸・差別化機会を把握します。Step 0で確認した投資根拠をもとに、「どの軸で・どれだけの差があるか」を具体化します。</div>
+      <div class="ctx-phasebar">
+        <span class="cp active">市場分析</span><span class="cp-sep">›</span>
+        <span class="cp">目標設定</span><span class="cp-sep">›</span>
+        <span class="cp">アーキ設定・計画</span><span class="cp-sep">›</span>
+        <span class="cp">評価・検証</span><span class="cp-sep">›</span>
+        <span class="cp">成立確認</span><span class="cp-sep">›</span>
+        <span class="cp">方針判断</span>
+      </div>
     </div>
-    <div class="ctx-q">この車は何で勝負するか？</div>
+    <div class="ctx-q">NVのどの軸が最大の差別化機会か？</div>
   </div>
   <div class="step-io"><span class="io-label">📂 参照データ:</span><span class="io-file">market_trend.yaml</span><span class="io-file">nv_benchmark_score.csv</span><span class="io-file">nv_product_value_map.csv</span><span class="io-arrow">→</span><span class="io-out">差別化すべきNV軸の特定</span></div>
   <div class="cpb">
@@ -533,17 +557,25 @@ tr:hover td{background:#f7fafc}
 
 </div>
 
-<!-- ========== STEP 2: コンセプトを決める ========== -->
+<!-- ========== STEP 2: NV開発コンセプトを決める ========== -->
 <div id="step2" class="sec">
   <div class="ctx-banner">
     <div class="ctx-step">Step 2</div>
     <div class="ctx-body">
-      <div class="ctx-title">NV差別化コンセプト — 3案を比較する</div>
-      <div class="ctx-desc">市場分析を踏まえ、NVコンセプトの方向性を3案で提示。チームで議論し、開発の軸を決める。</div>
+      <div class="ctx-title">NV性能目標を設定し、開発コンセプトを決定する</div>
+      <div class="ctx-desc">Step 0-1で特定した差別化機会をもとに、NV性能目標の方向性を定め、開発コンセプトを決定します。ここで決まるコンセプトと目標がStep 3以降の設計・評価・判断すべての基準になります。</div>
+      <div class="ctx-phasebar">
+        <span class="cp done">市場分析</span><span class="cp-sep">›</span>
+        <span class="cp active">目標設定</span><span class="cp-sep">›</span>
+        <span class="cp">アーキ設定・計画</span><span class="cp-sep">›</span>
+        <span class="cp">評価・検証</span><span class="cp-sep">›</span>
+        <span class="cp">成立確認</span><span class="cp-sep">›</span>
+        <span class="cp">方針判断</span>
+      </div>
     </div>
-    <div class="ctx-q">どのコンセプトで進めるか？</div>
+    <div class="ctx-q">どのコンセプトで、どこまで達成するか？</div>
   </div>
-  <div class="step-io"><span class="io-label">📂 参照データ:</span><span class="io-file">product_concept.yaml</span><span class="io-file">customer_scene.csv</span><span class="io-file">nv_requirement_map.csv</span><span class="io-arrow">→</span><span class="io-out">コンセプト選択とNV要求の確定</span></div>
+  <div class="step-io"><span class="io-label">📂 参照データ:</span><span class="io-file">product_concept.yaml</span><span class="io-file">customer_scene.csv</span><span class="io-file">nv_requirement_map.csv</span><span class="io-arrow">→</span><span class="io-out">NV性能目標・開発コンセプトの決定</span></div>
   <div class="cpb">
     <div class="cpb-label">Step 2 ビジュアライゼーション</div>
     <div class="cpb-title"><span class="cpb-tag">意思決定</span>3つのNVコンセプト案を比較し、市場差別化力・商品性整合・重量制約の3軸で最適案を選ぶ</div>
@@ -763,22 +795,30 @@ tr:hover td{background:#f7fafc}
       <div class="vc"><div class="vc-id">V05 ★優先5</div><div class="vc-t">軽快さと静粛性を両立する</div><div class="vc-d">NV対策重量増+20kg以内に抑制 <span class="ctag">S01</span></div></div>
     </div>
     <div style="margin-top:10px;padding:9px 12px;background:#f0f4f8;border-left:3px solid var(--acc);border-radius:0 4px 4px 0;font-size:10px;line-height:1.9;color:var(--t1)">
-      案Aの採用により、V01〜V05の商品性価値が開発全体の判断軸として確定した。Step 3以降の設計変更リスク評価・試作評価・課題ランキングはすべて、この商品性価値への影響を基準として判断する。「何dBが問題か」ではなく「どの顧客体験が損なわれるか」が問いの軸になる。
+      案Aの採用により、V01〜V05の商品性価値が開発全体の判断軸として確定しました。Step 3以降の要求具体化・検証設計・評価実施・対策方針決定はすべて、この商品性価値への影響を基準として判断します。「何dBが問題か」ではなく「どの顧客体験が損なわれるか」が問いの軸になります。
     </div>
   </div>
 </div>
 
-<!-- ========== STEP 3: 前機種との違いを予測する ========== -->
+<!-- ========== STEP 3: アーキテクチャー設計・計画立案 ========== -->
 <div id="step3" class="sec">
   <div class="ctx-banner">
     <div class="ctx-step">Step 3</div>
     <div class="ctx-body">
-      <div class="ctx-title">コンセプト→NV要求変換 + 前機種アーキテクチャー比較</div>
-      <div class="ctx-desc">Step 2で確定した「案A: 後席静粛性特化」をNV要求数値（R01〜R08）に変換します。続いて前機種からの設計変更5件がこれらの要求にどう影響するかをAIが予測します。</div>
+      <div class="ctx-title">部品変化点を確認し、アーキテクチャーを設計してリスク・課題・計画を整理する</div>
+      <div class="ctx-desc">Step 2のコンセプト・目標をもとに、部品変化点を確認してアーキテクチャー設計（設定）に織り込みます。設計リスクと課題を特定し、評価・開発計画として整理します。</div>
+      <div class="ctx-phasebar">
+        <span class="cp done">市場分析</span><span class="cp-sep">›</span>
+        <span class="cp done">目標設定</span><span class="cp-sep">›</span>
+        <span class="cp active">アーキ設定・計画</span><span class="cp-sep">›</span>
+        <span class="cp">評価・検証</span><span class="cp-sep">›</span>
+        <span class="cp">成立確認</span><span class="cp-sep">›</span>
+        <span class="cp">方針判断</span>
+      </div>
     </div>
-    <div class="ctx-q">どのNV要求を最優先にするか？</div>
+    <div class="ctx-q">何を変えれば目標を達成できるか？</div>
   </div>
-  <div class="step-io"><span class="io-label">📂 参照データ:</span><span class="io-file">design_change.csv</span><span class="io-file">baseline_measurement.csv</span><span class="io-file">vehicle_system_map.csv</span><span class="io-arrow">→</span><span class="io-out">実測前のNVリスク予測とPareto Front</span></div>
+  <div class="step-io"><span class="io-label">📂 参照データ:</span><span class="io-file">design_change.csv</span><span class="io-file">baseline_measurement.csv</span><span class="io-file">vehicle_system_map.csv</span><span class="io-arrow">→</span><span class="io-out">要求仕様の確定と検証すべきリスク課題の特定</span></div>
 
   <!-- ③ コンセプト→NV要求変換パネル -->
   <div class="card" id="viz-concept-to-req" style="border-left:4px solid #6366f1">
@@ -980,8 +1020,8 @@ tr:hover td{background:#f7fafc}
   </div>
   <div class="cpb">
     <div class="cpb-label">Step 3 ビジュアライゼーション</div>
-    <div class="cpb-title"><span class="cpb-tag">リスク予測</span>前機種からの設計変更5件がNVにどう影響するかをAIが事前予測し、実測前に対策すべき箇所を特定する</div>
-    <div class="cpb-how">左の表で「変更内容 → 予測リスク → 確からしさ」を確認。右のスパイダーチャートで<b>橙線（予測値）が青線（目標）を下回る軸</b>が要対策項目。設計変更が承認される前の段階で行うのがポイント。</div>
+    <div class="cpb-title"><span class="cpb-tag">課題特定</span>案Aのコンセプトをアーキテクチャー設計に落とし込み、設計変更5件がR01〜R08のどの要求を脅かすかを事前に特定して課題とリスクを整理する</div>
+    <div class="cpb-how">左の表で「変更内容 → 予測リスク → 確からしさ」を確認。右のスパイダーチャートで<b>橙線（予測値）が青線（目標）を下回る軸</b>が検証優先対象です。このリスク特定に基づいてStep 4の評価条件を設計します。</div>
   </div>
   <div class="g2">
     <div class="card" id="viz-risk">
@@ -1178,7 +1218,7 @@ tr:hover td{background:#f7fafc}
       <div class="ev-con"></div>
       <div class="ev-node jdg"><div class="ev-title">🧪 原因仮説・追加検証（TPA / モーダル解析）</div><div class="ev-content">タイヤ主因(High) / ブッシュ副因(Medium) / サブフレーム寄与未確認 / 追加検証計画</div></div>
       <div class="ev-con"></div>
-      <div class="ev-node out"><div class="ev-title">📝 DRBFM・判断メモ・知見カード（DR-001〜003, KN01〜04）</div><div class="ev-content">DR提出用 / 次シナリオへの引き継ぎ</div></div>
+      <div class="ev-node out"><div class="ev-title">📝 開発判断記録・判断メモ・知見カード（判断記録-001〜003, KN01〜04）</div><div class="ev-content">方針判断記録 / 次フェーズへの引き継ぎ</div></div>
       <div class="ev-con"></div>
       <div class="ev-node out"><div class="ev-title">🔍 判断トレース + Evidence Map</div><div class="ev-content">各判断に使用ファイル・データID・判断軸・根拠・確からしさを記録</div></div>
     </div>
@@ -1247,18 +1287,26 @@ tr:hover td{background:#f7fafc}
   <div class="ctx-banner">
     <div class="ctx-step">Step 4</div>
     <div class="ctx-body">
-      <div class="ctx-title">AIの予測と実測を照合する</div>
-      <div class="ctx-desc">Step 3でAIが予測したリスクが実測でどう出たかを照合する。測定値と官能コメントをAIが自動で突き合わせ、「数字の裏にある体験」を言語化する。</div>
+      <div class="ctx-title">評価を実施し、課題に対する結果を整理する</div>
+      <div class="ctx-desc">Step 3で立案した評価計画に基づき測定を実施します。目標値との比較と官能評価を突き合わせ、どの課題がどの程度の影響を持つかを整理します。</div>
+      <div class="ctx-phasebar">
+        <span class="cp done">市場分析</span><span class="cp-sep">›</span>
+        <span class="cp done">目標設定</span><span class="cp-sep">›</span>
+        <span class="cp done">アーキ設定・計画</span><span class="cp-sep">›</span>
+        <span class="cp active">評価・検証</span><span class="cp-sep">›</span>
+        <span class="cp">成立確認</span><span class="cp-sep">›</span>
+        <span class="cp">方針判断</span>
+      </div>
     </div>
-    <div class="ctx-q">何が問題か、なぜ問題か？</div>
+    <div class="ctx-q">評価結果は目標と整合しているか？</div>
   </div>
-  <div class="step-io"><span class="io-label">📂 参照データ:</span><span class="io-file">measurement_result.csv</span><span class="io-file">subjective_comment.md</span><span class="io-arrow">→</span><span class="io-out">Step3予測と実測の照合・体験的意味の解釈</span></div>
+  <div class="step-io"><span class="io-label">📂 参照データ:</span><span class="io-file">measurement_result.csv</span><span class="io-file">subjective_comment.md</span><span class="io-arrow">→</span><span class="io-out">評価条件の設計・測定実施・要求達成度の確認</span></div>
   <div class="ptitle">評価結果・官能コメント</div>
   <div class="pdesc">測定値と官能コメントを突き合わせて商品性未達リスクを読む</div>
   <div class="cpb">
     <div class="cpb-label">Step 4 ビジュアライゼーション</div>
-    <div class="cpb-title"><span class="cpb-tag">予測照合</span>AIが事前に予測した悪化箇所と実測値を突き合わせ、官能コメントで「数字の裏にある体験的意味」を確認する</div>
-    <div class="cpb-how">測定値だけでは「何が問題か」は分かっても「なぜ問題か（体験として）」は分からない。<b>官能コメントが一致した測定値</b>は、顧客が実際に感じている問題として最優先で扱う。</div>
+    <div class="cpb-title"><span class="cpb-tag">評価結果確認</span>Step 3で計画した評価を実施した結果を読みます。AIが事前に予測した悪化箇所と実測値を突き合わせ、「どの要求が未達か・なぜか」を官能コメントで確認します</div>
+    <div class="cpb-how">測定値だけでは「何が問題か」は分かっても「なぜ問題か（体験として）」は分かりません。<b>官能コメントが一致した測定値</b>は、顧客が実際に感じている問題として最優先で扱います。</div>
   </div>
   <div class="card" id="viz-spr">
     <div class="ctitle">🚗 振動伝達経路マップ — どこからどこへ伝わっているか <span class="info-toggle" onclick="toggleInfo('spr-info')">📖 読み方</span></div>
@@ -1402,18 +1450,26 @@ tr:hover td{background:#f7fafc}
   <div class="ctx-banner">
     <div class="ctx-step">Step 5</div>
     <div class="ctx-body">
-      <div class="ctx-title">NV全体の成立性を確認する</div>
-      <div class="ctx-desc">課題の優先順位を決めるだけでなく、NVドメイン全体として目標が成立するかを確認する。有望な対策領域とデータが不足している領域も同時に特定する。</div>
+      <div class="ctx-title">全体の成立性を確認する</div>
+      <div class="ctx-desc">Step 4の結果を受けて、Step 2で設定した目標が全体商品性として成立するかを確認します。課題の影響度・制約（電費・重量・コスト）・対策候補のトレードオフを整理し、開発計画が現実的かを判断します。</div>
+      <div class="ctx-phasebar">
+        <span class="cp done">市場分析</span><span class="cp-sep">›</span>
+        <span class="cp done">目標設定</span><span class="cp-sep">›</span>
+        <span class="cp done">アーキ設定・計画</span><span class="cp-sep">›</span>
+        <span class="cp done">評価・検証</span><span class="cp-sep">›</span>
+        <span class="cp active">成立確認</span><span class="cp-sep">›</span>
+        <span class="cp">方針判断</span>
+      </div>
     </div>
-    <div class="ctx-q">優先順位の根拠を説明できるか？</div>
+    <div class="ctx-q">現在の計画は全体として成立するか？</div>
   </div>
-  <div class="step-io"><span class="io-label">📂 参照データ:</span><span class="io-file">judgment_rule.yaml</span><span class="io-file">issue_ranking.csv</span><span class="io-file">bayes_candidates.csv</span><span class="io-arrow">→</span><span class="io-out">課題優先順位の根拠と次実験候補</span></div>
+  <div class="step-io"><span class="io-label">📂 参照データ:</span><span class="io-file">judgment_rule.yaml</span><span class="io-file">issue_ranking.csv</span><span class="io-file">bayes_candidates.csv</span><span class="io-arrow">→</span><span class="io-out">成立性判断・対策候補の優先順位とトレードオフ整理</span></div>
   <div class="ptitle">課題ランキング</div>
   <div class="pdesc">判断軸6軸でスコアリング ── 商品性未達リスクが大きい順</div>
   <div class="cpb">
     <div class="cpb-label">Step 5 ビジュアライゼーション</div>
-    <div class="cpb-title"><span class="cpb-tag">優先順位根拠</span>「感覚でうるさいもの」ではなく「商品性への影響が大きいもの」を上位にするためのスコアリング結果</div>
-    <div class="cpb-how">6軸の重み付きスコアを合算（最大105pt）。商品性影響（×5）が最重要軸なので、複数の商品性価値に影響する課題が上位に来る設計。CRITICAL≥80pt / HIGH≥65pt。</div>
+    <div class="cpb-title"><span class="cpb-tag">成立性確認</span>課題の影響度・対策候補のトレードオフを整理し、Step 2で設定した目標が全体として成立するかを判断する</div>
+    <div class="cpb-how">6軸の重み付きスコアで課題の影響度を定量化（最大105pt）。商品性影響（×5）が最重要軸であり、複数の商品性に影響する課題が上位に来る設計。この優先順位を起点に対策候補を整理し、制約との整合を確認します。</div>
   </div>
   <div class="card" id="viz-ranking" style="background:var(--blubg);border-color:var(--blubd)">
     <div style="font-size:11px;color:#2b6cb0"><b>判断軸 <span data-tip="<b>スコアの読み方</b><br>各課題を6軸で採点し重み付きで合算（最大105点）。点数が高いほど今すぐ対策すべき課題。<br>「音が大きい順」ではなく「商品性への影響が大きい順」で並ぶ設計。<br><i>各軸の名称にマウスを当てると重みと説明が出ます。</i>">❓</span>：</b>
@@ -1446,7 +1502,7 @@ tr:hover td{background:#f7fafc}
       </div>
     </div>
     <div style="margin-top:10px;padding:9px 12px;background:#f0f4f8;border-left:3px solid var(--acc);border-radius:0 4px 4px 0;font-size:10px;line-height:1.9;color:var(--t1)">
-      Step 4でNGが4件出ました。開発リソースには限りがあり、すべてを同時に最優先で対策することはできません。このスコアリングは商品性への影響を最重要軸（×5）として設計されており、音の大きさではなく「どの顧客体験を損なうか」を起点に順位を決めます。その結果、ISS01こもりが92pt・ISS02後席ノイズが84ptとなり、こもりが最優先となりました。<b>→ こもりが1位になる根拠を次で確認します。</b>
+      Step 4の評価で課題が特定されました。次に「Step 2で設定した目標が全体として成立するか」を確認します。このスコアリングは商品性への影響を最重要軸（×5）として設計されており、音の大きさではなく「どの顧客体験を損なうか」を起点に課題の影響度を評価します。ISS01こもりが92pt・ISS02後席ノイズが84ptとなり、こもりが最優先の対策候補です。<b>→ こもりが1位になる根拠を次で確認し、対策候補のトレードオフをStep 6で整理します。</b>
     </div>
   </div>
   <div class="ic C" id="viz-iss01"><div class="ihdr" onclick="tog(this)">
@@ -1463,7 +1519,7 @@ tr:hover td{background:#f7fafc}
         <div class="sbl">日程影響 ×2</div><div class="sbg"><div class="sbf" style="width:60%"></div></div><div class="sbv">6pt</div>
       </div>
       <div style="font-size:10px;margin-top:6px;padding:8px 10px;background:var(--redbg);border-left:3px solid var(--red);border-radius:0 4px 4px 0;line-height:1.9">
-        こもりが1位になる根拠は2点あります。第一に、乖離+4.0dBは今回の全NG測定中の最大値であり、目標比では最も深刻な未達です。第二に、V02「長距離でも疲れにくい」とV03「荒れた路面でも上質に感じる」の2つの商品性に直接影響します。後席ノイズ（ISS02）は乖離+2.2dBでV01の1軸への影響にとどまります。乖離の大きさと影響する商品性の数を掛け合わせると、こもりが先に来ます。<b>この根拠があるからこそ、来週のDRで「ロードノイズより先にこもりを対策する」と説明できます。→ Step 6でDR向けの説明を整理します。</b>
+        こもりが1位になる根拠は2点あります。第一に、乖離+4.0dBは今回の全NG測定中の最大値であり、目標比では最も深刻な未達です。第二に、V02「長距離でも疲れにくい」とV03「荒れた路面でも上質に感じる」の2つの商品性に直接影響します。後席ノイズ（ISS02）は乖離+2.2dBでV01の1軸への影響にとどまります。乖離の大きさと影響する商品性の数を掛け合わせると、こもりが先に来ます。<b>この優先順位を踏まえ、Step 6で対策候補の全体影響を確認し方針を確定します。</b>
       </div>
     </div>
   </div>
@@ -1621,7 +1677,7 @@ tr:hover td{background:#f7fafc}
       <div class="ev-con"></div>
       <div class="ev-node out"><div class="ev-title">追加検証計画</div><div class="ev-content">① TPA ② ブッシュ前後加速度比較 ③ フロアモーダル解析 ④ サブフレーム寄与確認</div></div>
       <div class="ev-con"></div>
-      <div class="ev-node out"><div class="ev-title">DRBFMアイテム（DR-002）</div><div class="ev-content">DC02ブッシュ高剛性化に起因するこもり悪化リスク</div></div>
+      <div class="ev-node out"><div class="ev-title">開発判断記録（判断記録-002）</div><div class="ev-content">DC02ブッシュ高剛性化に起因するこもり悪化リスク</div></div>
       <div class="ev-con"></div>
       <div class="ev-node out"><div class="ev-title">知見カード（KN02）</div><div class="ev-content">「操安目的のブッシュ高剛性化は低周波こもりを悪化させる。変更前にTPA予測で寄与量を確認すること。」</div></div>
     </div>
@@ -1633,18 +1689,26 @@ tr:hover td{background:#f7fafc}
   <div class="ctx-banner">
     <div class="ctx-step">Step 6</div>
     <div class="ctx-body">
-      <div class="ctx-title">商品性全体への成立性を確認してDRへ</div>
-      <div class="ctx-desc">NVの課題対策案が決まった。最後に「このNV改善案が電費・重量・コストにどう影響するか」を確認し、Step 0で見た全体商品性の観点からHondaの戦略が成立するかを判断してDRに臨む。</div>
+      <div class="ctx-title">対策方針を判断し、開発判断を記録して次フェーズへ引き継ぐ</div>
+      <div class="ctx-desc">Step 5の成立性確認を踏まえ、対策方針を判断します。NV改善が全体商品性目標と整合していることを確認したうえで、開発判断・設計変更根拠・知見を記録し次フェーズへ引き継ぎます。</div>
+      <div class="ctx-phasebar">
+        <span class="cp done">市場分析</span><span class="cp-sep">›</span>
+        <span class="cp done">目標設定</span><span class="cp-sep">›</span>
+        <span class="cp done">アーキ設定・計画</span><span class="cp-sep">›</span>
+        <span class="cp done">評価・検証</span><span class="cp-sep">›</span>
+        <span class="cp done">成立確認</span><span class="cp-sep">›</span>
+        <span class="cp active">方針判断</span>
+      </div>
     </div>
-    <div class="ctx-q">DRで何をどう説明するか？</div>
+    <div class="ctx-q">方針をどう判断し、何を引き継ぐか？</div>
   </div>
-  <div class="step-io"><span class="io-label">📂 参照データ:</span><span class="io-file">pareto_front.csv</span><span class="io-file">decision_trace.csv</span><span class="io-file">overall_to_nv_map.csv</span><span class="io-arrow">→</span><span class="io-out">NV対策の副作用確認と商品性成立判断</span></div>
-  <div class="ptitle">判断メモ・DRBFM・知見カード</div>
+  <div class="step-io"><span class="io-label">📂 参照データ:</span><span class="io-file">pareto_front.csv</span><span class="io-file">decision_trace.csv</span><span class="io-file">overall_to_nv_map.csv</span><span class="io-arrow">→</span><span class="io-out">対策方針の判断・開発判断の記録と次フェーズへの引き継ぎ</span></div>
+  <div class="ptitle">判断メモ・開発判断記録・知見カード</div>
   <div class="pdesc">次のDRに向けた開発判断 ── 根拠ある形で残す</div>
   <div class="card" id="viz-product-impact">
     <div class="ctitle">⚖️ NV対策の副作用 — 商品性全体への影響確認</div>
     <div style="margin-bottom:10px;padding:9px 12px;background:#f0f4f8;border-left:3px solid var(--acc);border-radius:0 4px 4px 0;font-size:10px;line-height:1.9;color:var(--t1)">
-      Step 0で確認した通り、NVドメインは全体商品性の15%を占めています。Step 3のPareto Frontで示したように、NV対策には必ずトレードオフが伴います。DRで「NVを改善する」と言うためには、「何を犠牲にして、それは許容範囲か」を同時に説明できなければなりません。このテーブルは対策候補ごとに全体商品性への副作用を整理したものです。
+      Step 5で整理した対策候補が、電費・重量・コスト等の他商品性ドメインに与える影響を確認します。NV改善と他ドメイン制約のトレードオフを明らかにすることで、全体商品性として成立する対策方針を確定します。このテーブルは対策候補ごとに全体商品性への影響を整理したものです。
     </div>
     <table><thead><tr>
       <th>対策案</th><th>NV改善</th><th>電費影響</th><th>重量影響</th><th>コスト影響</th><th>操安影響</th><th>総合判定</th>
@@ -1679,18 +1743,18 @@ tr:hover td{background:#f7fafc}
       </tr>
     </tbody></table>
     <div style="margin-top:10px;padding:9px 12px;background:#f0f4f8;border-left:3px solid var(--acc);border-radius:0 4px 4px 0;font-size:10px;line-height:1.9;color:var(--t1)">
-      3案の副作用を確認しました。タイヤ再選定は電費-8Wh/kmの影響がありますが、NV改善効果が最も大きく、コスト・重量の副作用は許容範囲内です。ブッシュ最適化は操安への影響があり、TPA実施後に操安チームとの合意が条件となります。この2案を組み合わせた場合のNV改善量は推定+3.6ptであり、E:NX2の全体商品性スコアは現在の6.5から7.4まで改善する見込みです。これはStep 0のギャップ分析で「NVを競合水準（IONIQ5：8.3）に近づけた場合の全体商品性への貢献+0.27pt」として試算した効果範囲と整合しており、V字の起点から成立性が確認できました。<b>→ この根拠を持ってDRに臨みます。</b>
+      3案の副作用を確認しました。タイヤ再選定は電費-8Wh/kmの影響がありますが、NV改善効果が最も大きく、コスト・重量の副作用は許容範囲内です。ブッシュ最適化は操安への影響があり、TPA実施後に操安チームとの合意が条件となります。この2案を組み合わせた場合のNV改善量は推定+3.6ptであり、E:NX2の全体商品性スコアは現在の6.5から7.4まで改善する見込みです。Step 0で確認した「NV改善による全体商品性への貢献」と整合しており、全体として成立することを確認しました。<b>→ 対策方針を確定し、開発判断として記録します。</b>
     </div>
   </div>
   <div class="cpb">
     <div class="cpb-label">Step 6 ビジュアライゼーション</div>
-    <div class="cpb-title"><span class="cpb-tag">DR準備</span>Step 1〜5の分析結果を「DRで説明できる形」に整理する。判断根拠・対策方針・知見の3層構造で記録する</div>
-    <div class="cpb-how">判断メモ＝方針と根拠の要約。DRBFM＝設計変更別のリスクと確認方法。知見カード＝今回学んだことを次の開発シナリオへ引き継ぐ資産。<b>この3点がそろってDRで説明できる状態</b>になる。</div>
+    <div class="cpb-title"><span class="cpb-tag">方針判断</span>Step 1〜5の分析結果をもとに対策方針を確定し、判断根拠・設計変更記録・知見の3層で記録して次フェーズへ引き継げる状態にする</div>
+    <div class="cpb-how">判断メモ＝確定した方針と根拠の要約。開発判断記録＝設計変更別のリスクと確認方法。知見カード＝今回学んだことを次フェーズへ引き継ぐ資産。<b>この3点がそろって方針が確定し、次フェーズへ引き継げる状態</b>になります。</div>
   </div>
   <div class="card" id="viz-decision">
     <div class="ctitle">📝 開発判断メモ</div>
     <div style="margin-bottom:10px;padding:9px 12px;background:#f0f4f8;border-left:3px solid var(--acc);border-radius:0 4px 4px 0;font-size:10px;line-height:1.9;color:var(--t1)">
-      Step 1〜5の分析を経て、優先順位と対策方針が確定しました。来週のDRでは「何が問題か・なぜその順番で対策するのか・どう対処するか」を根拠付きで説明する必要があります。以下がその判断の要約です。
+      Step 5の成立性確認を経て、対策方針を確定します。「何が問題か・なぜその順番で対策するのか・どう対処するか」を根拠付きで記録し、関係者と共有できる状態にします。以下がその判断の要約です。
     </div>
     <div style="font-size:11px;line-height:1.9">
       ① <b>最優先：後席こもりとNLの同時対策方針</b>とする。遮音材増量は重量制約（TR03）に反するため対策の主軸から外す。<br>
@@ -1701,12 +1765,12 @@ tr:hover td{background:#f7fafc}
     </div>
   </div>
   <div class="card" id="viz-drbfm">
-    <div class="ctitle">⚠️ DRBFMアイテム <span data-tip="<b>DRBFMとは</b><br>Design Review Based on Failure Mode。設計変更を起点とした問題の事前検討フォーマット。<br>「何を変えたら・何が心配で・どう確認するか」をDRで説明するための標準書式。<br><i>トヨタが開発した手法で自動車業界で広く使われている。</i>">❓</span></div>
+    <div class="ctitle">⚠️ 開発判断記録 — 設計変更別リスクと対応方針 <span data-tip="<b>開発判断記録とは</b><br>設計変更を起点とした問題の事前検討と対応方針の記録フォーマット。<br>「何を変えたら・何が問題で・どう確認し・次はどう対応するか」を根拠付きで記録します。<br><i>Step 3の予測とStep 4の実測を統合した判断の記録です。</i>">❓</span></div>
     <div style="margin-bottom:10px;padding:9px 12px;background:#f0f4f8;border-left:3px solid var(--acc);border-radius:0 4px 4px 0;font-size:10px;line-height:1.9;color:var(--t1)">
-      Step 3で予測し、Step 4で実測確認した設計変更リスクを、DRで説明できる形にまとめました。DRでは「この設計変更が・こういう問題を起こしており・この根拠で確認できており・次はこう対応する」という順番で説明します。DR-001（DC01タイヤ）は仕様比較で因果が確認済みのためHigh確度です。DR-002（DC02ブッシュ）は実測確認済みですがTPA未実施のためMedium確度です。DR-003（DC05モーター）はロードノイズ改善後に顕在化するリスクとして今から管理が必要です。
+      Step 3で予測し、Step 4で実測確認した設計変更リスクを、対応方針とともに記録します。「この設計変更が・こういう問題を起こしており・この根拠で確認できており・次はこう対応する」という構造で開発判断を記録します。DC01タイヤは仕様比較で因果が確認済みのためHigh確度です。DC02ブッシュは実測確認済みですがTPA未実施のためMedium確度です。DC05モーターはロードノイズ改善後に顕在化するリスクとして今から管理が必要です。
     </div>
     <div class="drbfm-item">
-      <div class="drbfm-hdr"><span class="bdg C">DR-001</span> DC01 タイヤ低転がり化 → ロードノイズ悪化</div>
+      <div class="drbfm-hdr"><span class="bdg C">判断-001</span> DC01 タイヤ低転がり化 → ロードノイズ悪化</div>
       <div class="drbfm-body"><div class="drbfm-grid">
         <div class="drbfm-lbl">懸念事項</div><div>前後席NLが目標比+1.5〜+2.2dB超過（RSLT01/02）</div>
         <div class="drbfm-lbl">影響商品性</div><div>V01後席会話性・V05軽快さと静粛性の両立</div>
@@ -1715,7 +1779,7 @@ tr:hover td{background:#f7fafc}
       </div></div>
     </div>
     <div class="drbfm-item">
-      <div class="drbfm-hdr"><span class="bdg C">DR-002</span> DC02 ブッシュ高剛性化 → こもり・ハーシュネス悪化</div>
+      <div class="drbfm-hdr"><span class="bdg C">判断-002</span> DC02 ブッシュ高剛性化 → こもり・ハーシュネス悪化</div>
       <div class="drbfm-body"><div class="drbfm-grid">
         <div class="drbfm-lbl">懸念事項</div><div>こもり+1.5dB・後席NL+0.8dBの悪化（RSLT10/11）</div>
         <div class="drbfm-lbl">確認方法</div><div>TPA実施 / 剛性最適化によるNV・操安両立点探索</div>
@@ -1723,7 +1787,7 @@ tr:hover td{background:#f7fafc}
       </div></div>
     </div>
     <div class="drbfm-item">
-      <div class="drbfm-hdr"><span class="bdg H">DR-003</span> DC05 新型モーター → ギヤ音次数成分の顕在化</div>
+      <div class="drbfm-hdr"><span class="bdg H">判断-003</span> DC05 新型モーター → ギヤ音次数成分の顕在化</div>
       <div class="drbfm-body"><div class="drbfm-grid">
         <div class="drbfm-lbl">懸念事項</div><div>加速時ギヤ音官能「気になる」25%（RSLT08）</div>
         <div class="drbfm-lbl">確認方法</div><div>次数分析で3次成分特定 / モーター電磁力解析 / シャープネス管理値設定</div>
@@ -1749,6 +1813,282 @@ tr:hover td{background:#f7fafc}
       今回の開発で確認された知見を、次のシナリオへ引き継げる形でカード化しました。タイヤ・ブッシュ・EV音・軽量化の4領域で「この変更をするとNVにこう影響する」というパターンが蓄積されました。次の開発でAIがこの知見を参照することで、Step 1〜3の分析を1から繰り返すことなく前回の知見を起点に判断できるようになります。これがAIワークベンチとしての「学習と引き継ぎ」の実体です。
     </div>
   </div>
+</div>
+
+<!-- ========== FRAMEWORK: 開発フレームワーク参照 ========== -->
+<div id="framework" class="sec">
+  <div style="margin-bottom:16px">
+    <div style="font-size:16px;font-weight:700;color:#c8d8f0;margin-bottom:4px">NV開発フレームワーク</div>
+    <div style="font-size:11px;color:#718096">Step 0〜6 の全体立て付け — 名称・役割・I/P/O。各カードをクリックすると詳細へ移動します。</div>
+  </div>
+
+  <!-- フェーズフロー -->
+  <div style="display:flex;align-items:center;gap:0;margin-bottom:20px;background:#0f1923;border:1px solid #1a2d45;border-radius:8px;padding:12px 16px;overflow-x:auto">
+    <div style="text-align:center;flex:1;min-width:80px">
+      <div style="font-size:9px;color:#4a6080;margin-bottom:3px">S0 / S1</div>
+      <div style="font-size:11px;font-weight:600;color:#60a5fa;padding:5px 8px;background:rgba(96,165,250,.1);border-radius:5px;border:1px solid rgba(96,165,250,.2)">市場分析</div>
+    </div>
+    <div style="color:#2d3748;font-size:16px;padding:0 4px">›</div>
+    <div style="text-align:center;flex:1;min-width:80px">
+      <div style="font-size:9px;color:#4a6080;margin-bottom:3px">S2</div>
+      <div style="font-size:11px;font-weight:600;color:#fbbf24;padding:5px 8px;background:rgba(251,191,36,.1);border-radius:5px;border:1px solid rgba(251,191,36,.2)">目標設定</div>
+    </div>
+    <div style="color:#2d3748;font-size:16px;padding:0 4px">›</div>
+    <div style="text-align:center;flex:1;min-width:80px">
+      <div style="font-size:9px;color:#4a6080;margin-bottom:3px">S3</div>
+      <div style="font-size:11px;font-weight:600;color:#fbbf24;padding:5px 8px;background:rgba(251,191,36,.1);border-radius:5px;border:1px solid rgba(251,191,36,.2)">アーキ設計・計画</div>
+    </div>
+    <div style="color:#2d3748;font-size:16px;padding:0 4px">›</div>
+    <div style="text-align:center;flex:1;min-width:80px">
+      <div style="font-size:9px;color:#4a6080;margin-bottom:3px">S4</div>
+      <div style="font-size:11px;font-weight:600;color:#a78bfa;padding:5px 8px;background:rgba(167,139,250,.1);border-radius:5px;border:1px solid rgba(167,139,250,.2)">評価・検証</div>
+    </div>
+    <div style="color:#2d3748;font-size:16px;padding:0 4px">›</div>
+    <div style="text-align:center;flex:1;min-width:80px">
+      <div style="font-size:9px;color:#4a6080;margin-bottom:3px">S5</div>
+      <div style="font-size:11px;font-weight:600;color:#34d399;padding:5px 8px;background:rgba(52,211,153,.1);border-radius:5px;border:1px solid rgba(52,211,153,.2)">成立確認</div>
+    </div>
+    <div style="color:#2d3748;font-size:16px;padding:0 4px">›</div>
+    <div style="text-align:center;flex:1;min-width:80px">
+      <div style="font-size:9px;color:#4a6080;margin-bottom:3px">S6</div>
+      <div style="font-size:11px;font-weight:600;color:#f87171;padding:5px 8px;background:rgba(248,113,113,.1);border-radius:5px;border:1px solid rgba(248,113,113,.2)">方針判断</div>
+    </div>
+  </div>
+
+  <!-- 語彙の使い分け -->
+  <div style="display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap">
+    <div style="font-size:9px;color:#3a5070;padding:2px 6px;border-radius:3px;border:1px solid #1a2d45;align-self:center">語彙の使い分け</div>
+    <div style="font-size:10px;padding:4px 10px;border-radius:4px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.2);color:#fbbf24"><b>設定</b> — S2〜3：仮決め・検証前</div>
+    <div style="font-size:10px;padding:4px 10px;border-radius:4px;background:rgba(167,139,250,.08);border:1px solid rgba(167,139,250,.2);color:#a78bfa"><b>検証</b> — S4：評価・実測</div>
+    <div style="font-size:10px;padding:4px 10px;border-radius:4px;background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);color:#34d399"><b>確認</b> — S5：全体整合</div>
+    <div style="font-size:10px;padding:4px 10px;border-radius:4px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);color:#f87171"><b>判断</b> — S6：方針判断・記録・引き継ぎ</div>
+  </div>
+
+  <!-- Step カード一覧 -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+
+    <!-- Step 0 -->
+    <div onclick="navById('step0')" style="background:#fff;border:1px solid var(--bdr);border-radius:8px;overflow:hidden;cursor:pointer;transition:box-shadow .2s" onmouseover="this.style.boxShadow='0 4px 16px rgba(74,158,255,.15)'" onmouseout="this.style.boxShadow=''">
+      <div style="background:#1a2e4a;padding:12px 16px;display:flex;align-items:center;gap:10px;border-bottom:2px solid rgba(96,165,250,.4)">
+        <div style="font-size:10px;font-weight:700;color:#fff;background:rgba(96,165,250,.3);border-radius:4px;padding:2px 8px;white-space:nowrap">Step 0</div>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:#c8d8f0">市場・商品性分析</div>
+          <div style="font-size:10px;color:#4a6080;margin-top:1px">NVの役割と優先度を把握する</div>
+        </div>
+        <div style="margin-left:auto;font-size:9px;color:#60a5fa;border:1px solid rgba(96,165,250,.3);padding:2px 7px;border-radius:10px;white-space:nowrap">市場分析フェーズ</div>
+      </div>
+      <div style="padding:12px 16px">
+        <div style="font-size:11px;color:#2d3748;margin-bottom:10px;line-height:1.6">商品性全体の中でNVへの投資価値・役割を定量的に把握する</div>
+        <div style="display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:4px;align-items:start">
+          <div style="background:#f8fafc;border-radius:5px;padding:7px 9px;border:1px solid #e2e8f0">
+            <div style="font-size:8px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">INPUT</div>
+            <div style="font-size:10px;color:#475569;line-height:1.5">市場調査データ<br>競合車両スペック<br>商品企画要件</div>
+          </div>
+          <div style="color:#cbd5e0;font-size:14px;text-align:center;padding-top:14px">→</div>
+          <div style="background:#f8fafc;border-radius:5px;padding:7px 9px;border:1px solid #e2e8f0">
+            <div style="font-size:8px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">PROCESS</div>
+            <div style="font-size:10px;color:#475569;line-height:1.5">商品性ベンチマーク<br>NV貢献度スコア<br>優先度判断</div>
+          </div>
+          <div style="color:#cbd5e0;font-size:14px;text-align:center;padding-top:14px">→</div>
+          <div style="background:#f0fff4;border-radius:5px;padding:7px 9px;border:1px solid #9ae6b4">
+            <div style="font-size:8px;font-weight:700;color:#38a169;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">OUTPUT</div>
+            <div style="font-size:10px;color:#276749;line-height:1.5">NV投資優先度マップ<br>注力領域の仮設定</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 1 -->
+    <div onclick="navById('step1')" style="background:#fff;border:1px solid var(--bdr);border-radius:8px;overflow:hidden;cursor:pointer;transition:box-shadow .2s" onmouseover="this.style.boxShadow='0 4px 16px rgba(74,158,255,.15)'" onmouseout="this.style.boxShadow=''">
+      <div style="background:#1a2e4a;padding:12px 16px;display:flex;align-items:center;gap:10px;border-bottom:2px solid rgba(96,165,250,.4)">
+        <div style="font-size:10px;font-weight:700;color:#fff;background:rgba(96,165,250,.3);border-radius:4px;padding:2px 8px;white-space:nowrap">Step 1</div>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:#c8d8f0">NV性能ベンチマーク</div>
+          <div style="font-size:10px;color:#4a6080;margin-top:1px">差別化軸を絞り込む</div>
+        </div>
+        <div style="margin-left:auto;font-size:9px;color:#60a5fa;border:1px solid rgba(96,165,250,.3);padding:2px 7px;border-radius:10px;white-space:nowrap">市場分析フェーズ</div>
+      </div>
+      <div style="padding:12px 16px">
+        <div style="font-size:11px;color:#2d3748;margin-bottom:10px;line-height:1.6">競合との性能差を定量化し、差別化に効く軸を特定する</div>
+        <div style="display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:4px;align-items:start">
+          <div style="background:#f8fafc;border-radius:5px;padding:7px 9px;border:1px solid #e2e8f0">
+            <div style="font-size:8px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">INPUT</div>
+            <div style="font-size:10px;color:#475569;line-height:1.5">S0 優先度マップ<br>競合NV測定データ</div>
+          </div>
+          <div style="color:#cbd5e0;font-size:14px;text-align:center;padding-top:14px">→</div>
+          <div style="background:#f8fafc;border-radius:5px;padding:7px 9px;border:1px solid #e2e8f0">
+            <div style="font-size:8px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">PROCESS</div>
+            <div style="font-size:10px;color:#475569;line-height:1.5">性能差分分析<br>差別化ポテンシャル評価<br>注力軸選定</div>
+          </div>
+          <div style="color:#cbd5e0;font-size:14px;text-align:center;padding-top:14px">→</div>
+          <div style="background:#f0fff4;border-radius:5px;padding:7px 9px;border:1px solid #9ae6b4">
+            <div style="font-size:8px;font-weight:700;color:#38a169;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">OUTPUT</div>
+            <div style="font-size:10px;color:#276749;line-height:1.5">差別化軸の絞り込み<br>競合比較ベースライン</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div onclick="navById('step2')" style="background:#fff;border:1px solid var(--bdr);border-radius:8px;overflow:hidden;cursor:pointer;transition:box-shadow .2s" onmouseover="this.style.boxShadow='0 4px 16px rgba(251,191,36,.15)'" onmouseout="this.style.boxShadow=''">
+      <div style="background:#1a2e4a;padding:12px 16px;display:flex;align-items:center;gap:10px;border-bottom:2px solid rgba(251,191,36,.5)">
+        <div style="font-size:10px;font-weight:700;color:#fff;background:rgba(251,191,36,.25);border-radius:4px;padding:2px 8px;white-space:nowrap">Step 2</div>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:#c8d8f0">目標設定・コンセプト決定</div>
+          <div style="font-size:10px;color:#4a6080;margin-top:1px">NV性能目標と開発コンセプトを<span style="color:#fbbf24">設定</span>する</div>
+        </div>
+        <div style="margin-left:auto;font-size:9px;color:#fbbf24;border:1px solid rgba(251,191,36,.3);padding:2px 7px;border-radius:10px;white-space:nowrap">目標設定フェーズ</div>
+      </div>
+      <div style="padding:12px 16px">
+        <div style="font-size:11px;color:#2d3748;margin-bottom:10px;line-height:1.6">差別化軸に基づいてNV性能目標と開発コンセプトを<b style="color:#d97706">設定</b>する（仮決め・検証前）</div>
+        <div style="display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:4px;align-items:start">
+          <div style="background:#f8fafc;border-radius:5px;padding:7px 9px;border:1px solid #e2e8f0">
+            <div style="font-size:8px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">INPUT</div>
+            <div style="font-size:10px;color:#475569;line-height:1.5">S1 差別化軸<br>競合ベースライン</div>
+          </div>
+          <div style="color:#cbd5e0;font-size:14px;text-align:center;padding-top:14px">→</div>
+          <div style="background:#f8fafc;border-radius:5px;padding:7px 9px;border:1px solid #e2e8f0">
+            <div style="font-size:8px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">PROCESS</div>
+            <div style="font-size:10px;color:#475569;line-height:1.5">目標値設定<br>コンセプト案比較<br>コンセプト選定</div>
+          </div>
+          <div style="color:#cbd5e0;font-size:14px;text-align:center;padding-top:14px">→</div>
+          <div style="background:#fffbeb;border-radius:5px;padding:7px 9px;border:1px solid #fcd34d">
+            <div style="font-size:8px;font-weight:700;color:#d97706;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">OUTPUT</div>
+            <div style="font-size:10px;color:#92400e;line-height:1.5">NV性能目標（設定値）<br>開発コンセプト</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div onclick="navById('step3')" style="background:#fff;border:1px solid var(--bdr);border-radius:8px;overflow:hidden;cursor:pointer;transition:box-shadow .2s" onmouseover="this.style.boxShadow='0 4px 16px rgba(251,191,36,.15)'" onmouseout="this.style.boxShadow=''">
+      <div style="background:#1a2e4a;padding:12px 16px;display:flex;align-items:center;gap:10px;border-bottom:2px solid rgba(251,191,36,.5)">
+        <div style="font-size:10px;font-weight:700;color:#fff;background:rgba(251,191,36,.25);border-radius:4px;padding:2px 8px;white-space:nowrap">Step 3</div>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:#c8d8f0">アーキテクチャー設計・計画立案</div>
+          <div style="font-size:10px;color:#4a6080;margin-top:1px">設計方針とリスク・課題・計画を整理する</div>
+        </div>
+        <div style="margin-left:auto;font-size:9px;color:#fbbf24;border:1px solid rgba(251,191,36,.3);padding:2px 7px;border-radius:10px;white-space:nowrap">アーキ設計フェーズ</div>
+      </div>
+      <div style="padding:12px 16px">
+        <div style="font-size:11px;color:#2d3748;margin-bottom:10px;line-height:1.6">部品変化点を確認しアーキテクチャーを<b style="color:#d97706">設計（設定）</b>、リスク・課題・開発計画を明確にする</div>
+        <div style="display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:4px;align-items:start">
+          <div style="background:#f8fafc;border-radius:5px;padding:7px 9px;border:1px solid #e2e8f0">
+            <div style="font-size:8px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">INPUT</div>
+            <div style="font-size:10px;color:#475569;line-height:1.5">S2 コンセプト・目標<br>部品変化点情報<br>設計制約</div>
+          </div>
+          <div style="color:#cbd5e0;font-size:14px;text-align:center;padding-top:14px">→</div>
+          <div style="background:#f8fafc;border-radius:5px;padding:7px 9px;border:1px solid #e2e8f0">
+            <div style="font-size:8px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">PROCESS</div>
+            <div style="font-size:10px;color:#475569;line-height:1.5">部品変化点確認<br>アーキ設計<br>リスク・課題特定<br>開発計画策定</div>
+          </div>
+          <div style="color:#cbd5e0;font-size:14px;text-align:center;padding-top:14px">→</div>
+          <div style="background:#fffbeb;border-radius:5px;padding:7px 9px;border:1px solid #fcd34d">
+            <div style="font-size:8px;font-weight:700;color:#d97706;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">OUTPUT</div>
+            <div style="font-size:10px;color:#92400e;line-height:1.5">アーキ設計案（設定）<br>リスク・課題一覧<br>開発計画</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div onclick="navById('step4')" style="background:#fff;border:1px solid var(--bdr);border-radius:8px;overflow:hidden;cursor:pointer;transition:box-shadow .2s" onmouseover="this.style.boxShadow='0 4px 16px rgba(167,139,250,.15)'" onmouseout="this.style.boxShadow=''">
+      <div style="background:#1a2e4a;padding:12px 16px;display:flex;align-items:center;gap:10px;border-bottom:2px solid rgba(167,139,250,.5)">
+        <div style="font-size:10px;font-weight:700;color:#fff;background:rgba(167,139,250,.25);border-radius:4px;padding:2px 8px;white-space:nowrap">Step 4</div>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:#c8d8f0">評価・検証</div>
+          <div style="font-size:10px;color:#4a6080;margin-top:1px">評価を実施し、課題に対する結果を整理する</div>
+        </div>
+        <div style="margin-left:auto;font-size:9px;color:#a78bfa;border:1px solid rgba(167,139,250,.3);padding:2px 7px;border-radius:10px;white-space:nowrap">評価・検証フェーズ</div>
+      </div>
+      <div style="padding:12px 16px">
+        <div style="font-size:11px;color:#2d3748;margin-bottom:10px;line-height:1.6">設計方針に基づいて評価を実施し、課題と目標の整合を<b style="color:#7c3aed">検証</b>する</div>
+        <div style="display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:4px;align-items:start">
+          <div style="background:#f8fafc;border-radius:5px;padding:7px 9px;border:1px solid #e2e8f0">
+            <div style="font-size:8px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">INPUT</div>
+            <div style="font-size:10px;color:#475569;line-height:1.5">S3 アーキ設計案<br>開発計画<br>NV性能目標</div>
+          </div>
+          <div style="color:#cbd5e0;font-size:14px;text-align:center;padding-top:14px">→</div>
+          <div style="background:#f8fafc;border-radius:5px;padding:7px 9px;border:1px solid #e2e8f0">
+            <div style="font-size:8px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">PROCESS</div>
+            <div style="font-size:10px;color:#475569;line-height:1.5">評価実施<br>結果分析<br>課題抽出・目標比較</div>
+          </div>
+          <div style="color:#cbd5e0;font-size:14px;text-align:center;padding-top:14px">→</div>
+          <div style="background:#faf5ff;border-radius:5px;padding:7px 9px;border:1px solid #d8b4fe">
+            <div style="font-size:8px;font-weight:700;color:#7c3aed;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">OUTPUT</div>
+            <div style="font-size:10px;color:#5b21b6;line-height:1.5">評価結果<br>課題リスト<br>目標乖離分析</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div onclick="navById('step5')" style="background:#fff;border:1px solid var(--bdr);border-radius:8px;overflow:hidden;cursor:pointer;transition:box-shadow .2s" onmouseover="this.style.boxShadow='0 4px 16px rgba(52,211,153,.15)'" onmouseout="this.style.boxShadow=''">
+      <div style="background:#1a2e4a;padding:12px 16px;display:flex;align-items:center;gap:10px;border-bottom:2px solid rgba(52,211,153,.5)">
+        <div style="font-size:10px;font-weight:700;color:#fff;background:rgba(52,211,153,.2);border-radius:4px;padding:2px 8px;white-space:nowrap">Step 5</div>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:#c8d8f0">成立性確認</div>
+          <div style="font-size:10px;color:#4a6080;margin-top:1px">全体の成立性を確認する</div>
+        </div>
+        <div style="margin-left:auto;font-size:9px;color:#34d399;border:1px solid rgba(52,211,153,.3);padding:2px 7px;border-radius:10px;white-space:nowrap">成立確認フェーズ</div>
+      </div>
+      <div style="padding:12px 16px">
+        <div style="font-size:11px;color:#2d3748;margin-bottom:10px;line-height:1.6">評価結果をもとに、開発計画全体として成立するかを<b style="color:#059669">確認</b>する</div>
+        <div style="display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:4px;align-items:start">
+          <div style="background:#f8fafc;border-radius:5px;padding:7px 9px;border:1px solid #e2e8f0">
+            <div style="font-size:8px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">INPUT</div>
+            <div style="font-size:10px;color:#475569;line-height:1.5">S4 評価結果・課題<br>開発計画<br>リソース制約</div>
+          </div>
+          <div style="color:#cbd5e0;font-size:14px;text-align:center;padding-top:14px">→</div>
+          <div style="background:#f8fafc;border-radius:5px;padding:7px 9px;border:1px solid #e2e8f0">
+            <div style="font-size:8px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">PROCESS</div>
+            <div style="font-size:10px;color:#475569;line-height:1.5">対策案検討<br>トレードオフ整理<br>成立性判断</div>
+          </div>
+          <div style="color:#cbd5e0;font-size:14px;text-align:center;padding-top:14px">→</div>
+          <div style="background:#f0fdf4;border-radius:5px;padding:7px 9px;border:1px solid #86efac">
+            <div style="font-size:8px;font-weight:700;color:#059669;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">OUTPUT</div>
+            <div style="font-size:10px;color:#065f46;line-height:1.5">成立性判断<br>対策候補と<br>トレードオフ整理</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 6 (full width) -->
+    <div onclick="navById('step6')" style="grid-column:1/-1;background:#fff;border:1px solid var(--bdr);border-radius:8px;overflow:hidden;cursor:pointer;transition:box-shadow .2s" onmouseover="this.style.boxShadow='0 4px 16px rgba(248,113,113,.15)'" onmouseout="this.style.boxShadow=''">
+      <div style="background:#1a2e4a;padding:12px 16px;display:flex;align-items:center;gap:10px;border-bottom:2px solid rgba(248,113,113,.5)">
+        <div style="font-size:10px;font-weight:700;color:#fff;background:rgba(248,113,113,.2);border-radius:4px;padding:2px 8px;white-space:nowrap">Step 6</div>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:#c8d8f0">方針判断・引き継ぎ</div>
+          <div style="font-size:10px;color:#4a6080;margin-top:1px">対策方針を判断し、開発判断を記録して次フェーズへ引き継ぐ</div>
+        </div>
+        <div style="margin-left:auto;font-size:9px;color:#f87171;border:1px solid rgba(248,113,113,.3);padding:2px 7px;border-radius:10px;white-space:nowrap">方針判断フェーズ</div>
+      </div>
+      <div style="padding:12px 16px;display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:8px;align-items:start">
+        <div>
+          <div style="font-size:11px;color:#2d3748;margin-bottom:10px;line-height:1.6">全体成立性に基づいて対策方針を<b style="color:#dc2626">判断</b>し、開発判断を記録・引き継ぐ。唯一の「判断フェーズ」。</div>
+          <div style="background:#f8fafc;border-radius:5px;padding:7px 9px;border:1px solid #e2e8f0">
+            <div style="font-size:8px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">INPUT</div>
+            <div style="font-size:10px;color:#475569;line-height:1.5">S5 成立性判断・対策候補</div>
+          </div>
+        </div>
+        <div style="color:#cbd5e0;font-size:14px;text-align:center;padding-top:50px">→</div>
+        <div style="padding-top:32px">
+          <div style="background:#f8fafc;border-radius:5px;padding:7px 9px;border:1px solid #e2e8f0">
+            <div style="font-size:8px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">PROCESS</div>
+            <div style="font-size:10px;color:#475569;line-height:1.5">方針選択・判断<br>開発判断記録<br>引き継ぎ資料作成</div>
+          </div>
+        </div>
+        <div style="color:#cbd5e0;font-size:14px;text-align:center;padding-top:50px">→</div>
+        <div style="padding-top:32px">
+          <div style="background:#fff5f5;border-radius:5px;padding:7px 9px;border:1px solid #fca5a5">
+            <div style="font-size:8px;font-weight:700;color:#dc2626;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">OUTPUT</div>
+            <div style="font-size:10px;color:#991b1b;line-height:1.5">判断した対策方針<br>開発判断記録<br>次フェーズ指示</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /grid -->
 </div>
 
 </main>
@@ -1809,7 +2149,7 @@ function navById(id) {
   if (!el) return;
   el.classList.add('on');
   // map: step0〜6, trace, evidence, flow
-  const map = {step0:0,step1:1,step2:2,step3:3,step4:4,step5:5,step6:6,trace:7,evidence:8,flow:9};
+  const map = {step0:0,step1:1,step2:2,step3:3,step4:4,step5:5,step6:6,trace:7,evidence:8,flow:9,framework:10};
   const links = document.querySelectorAll('.sb a');
   links.forEach(a => a.classList.remove('active'));
   if (map[id] !== undefined) links[map[id]].classList.add('active');
@@ -1918,12 +2258,12 @@ const thinkSteps = {
     {c:'tcheck',i:'🔍',t:'なぜこもりがNLより上か: 目標乖離+4.0 vs +2.2 × 影響商品性V02/V03 vs V01'},
     {c:'tresult',i:'✅',t:'ランキング確定: ISS01(92)>ISS02(84)>ISS03(78)>ISS04(75)>ISS05(73)'}
   ],
-  // Step6: DRBFM + 知見カード生成
+  // Step6: 開発判断記録 + 知見カード生成
   s6: [
     {c:'tfile',i:'📂',t:'decision_trace.csv 読み込み中（D001〜D005）'},
-    {c:'tscore',i:'⚖️',t:'DR-001生成: DC01タイヤ → RSLT09新旧比較+2.1dB確認 → High確度'},
-    {c:'tscore',i:'⚖️',t:'DR-002生成: DC02ブッシュ → RSLT11こもり+1.5dB確認 → Medium確度'},
-    {c:'tscore',i:'⚖️',t:'DR-003生成: DC05モーター → RSLT08官能25% → Medium確度'},
+    {c:'tscore',i:'⚖️',t:'判断記録-001生成: DC01タイヤ → RSLT09新旧比較+2.1dB確認 → High確度'},
+    {c:'tscore',i:'⚖️',t:'判断記録-002生成: DC02ブッシュ → RSLT11こもり+1.5dB確認 → Medium確度'},
+    {c:'tscore',i:'⚖️',t:'判断記録-003生成: DC05モーター → RSLT08官能25% → Medium確度'},
     {c:'tscore',i:'⚖️',t:'KN01〜KN04: タイヤ/ブッシュ/EV音/軽量化の知見パターン抽出'},
     {c:'tresult',i:'✅',t:'全出力11ファイル生成 → 次シナリオへの知見引き継ぎ準備完了'}
   ]
@@ -1933,7 +2273,7 @@ const thinkSteps = {
 const demoScript = [
   // ── Step 0: 全体商品性を読む ──────────────────────────────
   { ms:0, nav:'step0', type:'sys', text:'📂 overall_benchmark_score.csv / attribute_tree.csv を読み込み中...' },
-  { ms:1200, nav:'step0', type:'step', text:'【Step 0】全体商品性を読む ─ この車はどの軸で勝負できるか', step:0 },
+  { ms:1200, nav:'step0', type:'step', text:'【Step 0】市場・商品性分析 ─ NVの役割と優先度を把握する', step:0 },
   { ms:2600, hl:'viz-overall', nav:'step0', type:'ai',
     text:'開発を始める前に、競合との立ち位置を全体商品性で確認します。overall_benchmark_score.csv を読み込みました。\n\nTesla Model Y: 全体商品性スコア **7.8**（最高位）/ NVスコア7.3（最下位）\nHyundai IONIQ5: 全体スコア7.1 / NVスコア **8.3**（最高位）\nBYD Han: 全体スコア6.9 / NVスコア6.5（価格競争力が強み）\nHonda E:NX1: 全体スコア6.5 / NVスコア6.5（中位）' },
   { ms:7000, hl:'viz-breakdown', nav:'step0', type:'ai',
@@ -1941,7 +2281,7 @@ const demoScript = [
 
   // ── Step 1: 市場を読む ──────────────────────────────
   { ms:12000, nav:'step1', type:'sys',  text:'📂 scenario_001 を読み込み中 ... market_trend.yaml / benchmark_score.csv' },
-  { ms:13200, nav:'step1', type:'step', text:'【Step 1】市場を読む ─ この車は何で勝負するか', step:1 },
+  { ms:13200, nav:'step1', type:'step', text:'【Step 1】NV性能ベンチマーク ─ 差別化軸を絞り込む', step:1 },
   // ①今回の開発が決まった
   { ms:14600, hl:'viz-trend', nav:'step1', type:'ai',
     text:'新型EV/HEV Crossoverの開発が、今期の最重要プロジェクトとして正式決定しました。\n\nまず前提となる市場環境を整理します。market_trend.yaml を読み込みました。' },
@@ -1956,7 +2296,7 @@ const demoScript = [
     text:'なお風切り音は E:NX2=8.1 で全競合最下位（Tesla 9.3が最高値）。モーター音も7.2で最下位。高速クルーズ静粛性の弱点でもある。\n\n→ **結論: 後席高速路NLをIONIQ5水準（8.0+）へ。この車はここで勝負します。**\n次は「どういうコンセプトで開発するか」を決めます。' },
 
   // ── Step 2: コンセプトを決める ─────────────────────
-  { ms:32000, nav:'step2', type:'step', text:'【Step 2】差別化コンセプトを決める ─ 3案を比較する', step:2 },
+  { ms:32000, nav:'step2', type:'step', text:'【Step 2】目標設定・コンセプト決定 ─ NV性能目標と開発コンセプトを設定する', step:2 },
   // ①3案の提示
   { ms:33500, hl:'viz-concept', nav:'step2', type:'ai',
     text:'「後席静粛性で差別化する」と決まりました。具体的にどのアプローチで開発するか、3つの方向性を比較します。\n\n案A「後席静粛性特化」: 後席NL・こもりにリソースを集中\n案B「EV音質重視」: モーター音・ギヤ音のゼロ化が最優先\n案C「走行性能との両立」: NV対策重量を最小化し操安を維持' },
@@ -1965,7 +2305,7 @@ const demoScript = [
     text:'比較軸で評価すると──\n\n市場差別化力: A > B > C（TR02/TR06の要求に最も合うのがA）\nV01/V02との整合: A > C > B（最優先商品性に直結するのがA）\n案B/Cでは後席NLがTesla Model Y水準に届かない\n\n→ **案A「後席静粛性特化」を推奨します。**\nV01後席会話性 / V02長距離快適性 / V03荒れ路上質感 を開発の軸とします。' },
 
   // ── Step 3: 前機種との違いとリスクを予測する ─────────
-  { ms:42500, nav:'step3', type:'step', text:'【Step 3】前機種との違いとNVリスクを予測する', step:3 },
+  { ms:42500, nav:'step3', type:'step', text:'【Step 3】アーキテクチャー設計・計画立案 ─ リスク・課題・計画を整理する', step:3 },
   // ①設計変更の概要
   { ms:44000, hl:'viz-risk', nav:'step3', type:'ai',
     text:'コンセプトが決まりました。次に「前機種から何が変わるか」を確認します。\n設計変更は5件。全てに性能上のトレードオフがあります。NVリスクを事前に予測します。' },
@@ -1976,8 +2316,8 @@ const demoScript = [
   { ms:53000, hl:'viz-arch', nav:'step3', type:'ai',
     text:'アーキテクチャーチャート（右）の橙線が「設計変更込みの予測値」です。\n後席NL・こもりで目標（青線）を大きく下回っています。\n\n→ DC01+DC02の複合でR02後席NL・R03こもりの目標達成が困難と予測。\n**実測前から対策を立案し、評価計画にTPA（伝達経路解析）を追加してください。**' },
 
-  // ── Step 4: 試作評価結果を読む ─────────────────────
-  { ms:58000, nav:'step4', type:'step', text:'【Step 4】試作評価結果を読む ─ 予測は当たったか', step:4 },
+  // ── Step 4: 評価を設計・実施し、仮説を検証する ─────────────────
+  { ms:58000, nav:'step4', type:'step', text:'【Step 4】評価・検証 ─ 評価を実施し課題に対する結果を整理する', step:4 },
   // ①試作データ読み込みと大局確認
   { ms:59500, hl:'viz-eval', nav:'step4', type:'ai',
     text:'評価結果が出ました。measurement_result.csv を読み込みます。\n\n13項目のうち OK: 9件 / NG: 4件。Step 3で予測した内容と照合します。' },
@@ -1989,7 +2329,7 @@ const demoScript = [
     text:'官能コメントと照合しました。数字は「体験」を語っていました。\n\nCMT02「後席で頭に響くような圧迫感。長距離乗ると疲れそう」\n→ RSLT03（56.0dB / 45Hz帯）と **完全一致**。V02「長距離でも疲れにくい」が未達。\n\nCMT01「後席では会話に集中しないといけない感じ」\n→ RSLT02（後席NL超過）と **一致**。V01「後席でも会話しやすい」が未達。\n\nCMT05「加速でヒューンとした音がスッと出てくる」\n→ ロードNL改善後に更に目立つリスクあり。今から対策が必要。' },
 
   // ── Step 5: 課題の優先順位を決める ─────────────────
-  { ms:74000, nav:'step5', type:'step', text:'【Step 5】課題の優先順位を決める ─ 感覚ではなく根拠で', step:5 },
+  { ms:74000, nav:'step5', type:'step', text:'【Step 5】全体の成立性を確認する', step:5 },
   // ①問題設定
   { ms:75500, hl:'viz-ranking', nav:'step5', type:'ai',
     text:'NGが4件出ました。開発リソースは有限です。\n6軸スコアリングで商品性への影響を定量化し、優先順位を決めます。' },
@@ -2004,19 +2344,19 @@ const demoScript = [
     text:'ISS01こもりが1位の根拠を確認します。\n\nこもり: 乖離 **+4.0dB**（全NGの中で最大）× 影響商品性 **V02/V03 の2軸**\n後席NL: 乖離 +2.2dB × 影響商品性 V01 の1軸\n\n乖離の大きさと影響商品性の数を掛け合わせると、**こもりが最優先**になります。' },
 
   // ── Step 6: DR向けをまとめる ─────────────────────────
-  { ms:93000, nav:'step6', type:'step', text:'【Step 6】DR向けをまとめる ─ 来週のDRで何を説明するか', step:6 },
-  // ①DRに向けた問題整理
+  { ms:93000, nav:'step6', type:'step', text:'【Step 6】方針判断・引き継ぎ ─ 対策方針を判断し次フェーズへ引き継ぐ', step:6 },
+  // ①方針判断の整理
   { ms:94500, hl:'viz-decision', nav:'step6', type:'ai',
-    text:'来週デザインレビューがあります。「どの設計変更が問題か、なぜか、どう対処するか」を根拠付きで説明する必要があります。DRBFMアイテムを自動生成します。' },
-  // ②DRBFMアイテム
+    text:'Step 5の成立性確認を踏まえ、対策方針を判断します。「どの設計変更が問題か、なぜか、どう対処するか」を根拠付きで整理し、開発判断として記録します。' },
+  // ②開発判断記録
   { ms:98500, hl:'viz-drbfm', nav:'step6', type:'ai',
-    text:'📋 **DR-001 DC01タイヤ低転がり化**\n　問題: 前後席NL +2.1dB（仕様比較で実測確認）\n　確からしさ: **High**（因果確認済み）\n　対策候補: 代替タイヤ探索 / ホイールハウス吸音材 / 燃費チームとの調整\n\n📋 **DR-002 DC02ブッシュ高剛性化**\n　問題: こもり +1.5dB（実測確認）\n　確からしさ: **Medium**（経路は未特定）\n　対策: TPA実施後に操安チームと最適剛性を再協議' },
+    text:'📋 **判断記録-001 DC01タイヤ低転がり化**\n　問題: 前後席NL +2.1dB（仕様比較で実測確認）\n　確からしさ: **High**（因果確認済み）\n　対策候補: 代替タイヤ探索 / ホイールハウス吸音材 / 燃費チームとの調整\n\n📋 **判断記録-002 DC02ブッシュ高剛性化**\n　問題: こもり +1.5dB（実測確認）\n　確からしさ: **Medium**（経路は未特定）\n　対策: TPA実施後に操安チームと最適剛性を再協議' },
   // ③知見カードで次プロジェクトへ
   { ms:103000, hl:'viz-knowledge', nav:'step6', type:'ai',
     text:'最後に、今回の知見を次のプロジェクトへ引き継ぎます。\n\n🎓 KN01: 低転がりタイヤはNLを2〜3dB悪化させる傾向。**選定段階で仕様比較必須。**\n🎓 KN02: ブッシュ高剛性化はこもりを悪化させる。TPA予測を先行実施。\n🎓 KN03: EV/HEVではロードNL改善後にギヤ音が浮く。電動系音の管理値を同時設定すること。\n\nこれらは次のシナリオでそのまま活用できます。' },
   // Done
   { ms:107000, nav:'step6', type:'done',
-    text:'✅ **Step 0〜6 完了**\n\n使用ファイル: overall_benchmark_score.csv / market_trend.yaml / benchmark_score.csv / design_change.csv / measurement_result.csv / subjective_comment.md / judgment_rule.yaml\nデータID: RSLT01-13 / CMT01-06 / DC01-05 / R01-08 / V01-05 / TR01-06\n判断トレース: D001-D005（全件根拠付き）\nDRBFM: DR-001〜003 / 知見カード: KN01〜KN04\n\n各Stepの判断根拠はいつでも遡れます。', step:null },
+    text:'✅ **Step 0〜6 完了**\n\n使用ファイル: overall_benchmark_score.csv / market_trend.yaml / benchmark_score.csv / design_change.csv / measurement_result.csv / subjective_comment.md / judgment_rule.yaml\nデータID: RSLT01-13 / CMT01-06 / DC01-05 / R01-08 / V01-05 / TR01-06\n判断トレース: D001-D005（全件根拠付き）\n開発判断記録: 判断記録-001〜003 / 知見カード: KN01〜KN04\n\n各Stepの判断根拠はいつでも遡れます。', step:null },
 ];
 
 function startDemo() {
@@ -2165,7 +2505,7 @@ function startRealDemo() {
       user:'全体商品性での立ち位置を確認してください。',
       think:'s0',
       ai:'overall_benchmark_score.csvとattribute_tree.csvを読み込みました。\n\nTesla Model Yが全体商品性スコア7.8で最上位ですが、NVスコアは7.3で最下位です。HyundaiはNVスコア8.3で最強ですが全体は7.1の中位。\n\nHonda E:NX1のNVスコア6.5を8.0に改善することで、全体商品性スコアへの貢献は+0.23pt改善します。これがE:NX2目標スコア（7.4）達成の主要ドライバーです。\n\n→ NVドメインへの集中投資が全体商品性改善の最大レバーです。Step 1でNV軸を詳細に分析します。' },
-    // ── Step 1: 市場を読む ──
+    // ── Step 1: NV競合差を7軸で把握する ──
     { nav:'step1', step:1,
       user:'新型EV Crossoverの開発がキックオフしました。まず市場環境と競合状況を整理してください。',
       think:'s1',
@@ -2175,13 +2515,13 @@ function startRealDemo() {
       think:null,
       ai:'**後席高速路NLでIONIQ5水準（8.0+）を超える**ことが最大の市場機会です。\n\nIONIQ5の後席NL高速(8.1)を超えることが具体目標。荒れ路・こもりはTeslaより優位（5.9/6.1 vs 5.6/5.7）なので守り切る。風切り音（8.1）は課題だが後席NLの改善が最優先です。\n\n→ 「後席でも会話しやすい・長距離でも疲れにくい」を体験価値の核に設定します。' },
 
-    // ── Step 2: コンセプトを決める ──
+    // ── Step 2: NV開発コンセプトを決める ──
     { nav:'step2', step:2,
       user:'後席静粛性で差別化する方向で、NVコンセプトの具体案を3つ出して比較してください。',
       think:'s2',
       ai:'3案を比較しました。\n\n案A「後席静粛性特化」: 後席NL・こもりにリソースを集中 → V01/V02に直結\n案B「EV音質重視」: モーター・ギヤ音ゼロ化 → 差別化ポイントが弱い（競合と同水準以上は既達）\n案C「走行性能両立」: 重量最小化 → 後席NLがTesla水準に届かない\n\n→ **案A「後席静粛性特化」を推奨します。**\nV01後席会話性 / V02長距離快適性 / V03荒れ路上質感 を開発の軸とします。' },
 
-    // ── Step 3: 前機種との違いを予測する ──
+    // ── Step 3: アーキテクチャー設計・計画立案 ──
     { nav:'step3', step:3,
       user:'前機種から今回の設計変更は5件あります。NVリスクを事前に予測してください。',
       think:'s3',
@@ -2191,7 +2531,7 @@ function startRealDemo() {
       think:null,
       ai:'DC01+DC02の複合でR02後席NL・R03こもりの目標達成が困難と予測されます。\n\n評価計画への反映：\n① DC03サブフレームのTPA（伝達経路解析）を追加\n② タイヤ新旧仕様比較テスト（TEST07）を最優先で実施\n③ ブッシュ新旧比較（TEST09）でこもり増分を確認\n\n→ 実測前から対策案を並行して検討することを強く推奨します。' },
 
-    // ── Step 4: 試作評価結果を読む ──
+    // ── Step 4: 評価・検証 ──
     { nav:'step4', step:4,
       user:'評価結果が出ました。Step3の予測と照合しながら読み取ってください。',
       think:'s4',
@@ -2201,7 +2541,7 @@ function startRealDemo() {
       think:null,
       ai:'官能コメントが数字の「体験的意味」を説明しています：\n\nCMT02「後席で頭に響くような圧迫感。長距離で疲れそう」\n→ RSLT03（56.0dB / 45Hz帯）と**完全一致**。V02「長距離でも疲れにくい」が未達。\n\nCMT01「後席では会話に集中しないといけない感じ」\n→ RSLT02（後席NL超過）と**一致**。V01「後席でも会話しやすい」が未達。\n\nCMT05「加速でヒューンとした音」→ ロードNL改善後に更に目立つリスク大。今から対策が必要。' },
 
-    // ── Step 5: 課題の優先順位を決める ──
+    // ── Step 5: 成立性確認 ──
     { nav:'step5', step:5,
       user:'NGが4件出ました。開発リソースは限られています。課題の優先順位を根拠付きで決めてください。',
       think:'s5',
@@ -2211,11 +2551,11 @@ function startRealDemo() {
       think:null,
       ai:'「こもりの方がうるさくない」のに1位になる理由を説明します。\n\nこもり（ISS01）: 乖離+4.0dB × **V02/V03の2つの商品性**に影響\n後席NL（ISS02）: 乖離+2.2dB × **V01の1つの商品性**に影響\n\n商品性影響軸（×5）の重みが最大なので、2商品性に跨るこもりが上に来ます。\n「音が大きい」という印象だけでロードNLを最優先にするのは、この車では正しくありません。\n**数字と商品性の重みを掛け合わせると、こもりが先です。**' },
 
-    // ── Step 6: DR向けをまとめる ──
+    // ── Step 6: 方針判断・引き継ぎ ──
     { nav:'step6', step:6,
-      user:'来週DRがあります。DRBFMと判断メモ、知見カードを生成してください。',
+      user:'Step 5の成立性確認を踏まえ、対策方針の判断記録と知見カードをまとめてください。',
       think:'s6',
-      ai:'**DR提出用アウトプット**を生成しました。\n\n📋 DR-001 DC01タイヤ: 前後席NL+2.1dB（High確度 / 仕様比較で因果確認済み）\n　対策候補: 代替タイヤ探索 / ホイールハウス吸音材 / 燃費チームとの調整\n\n📋 DR-002 DC02ブッシュ: こもり+1.5dB（Medium確度 / 経路未特定）\n　対策: TPA実施後に操安チームと最適剛性を再協議\n\n📋 DR-003 DC05モーター: ギヤ音官能25%（Medium確度）' },
+      ai:'**開発判断記録**を生成しました。\n\n📋 判断記録-001 DC01タイヤ: 前後席NL+2.1dB（High確度 / 仕様比較で因果確認済み）\n　対策候補: 代替タイヤ探索 / ホイールハウス吸音材 / 燃費チームとの調整\n\n📋 判断記録-002 DC02ブッシュ: こもり+1.5dB（Medium確度 / 経路未特定）\n　対策: TPA実施後に操安チームと最適剛性を再協議\n\n📋 判断記録-003 DC05モーター: ギヤ音官能25%（Medium確度）' },
     { nav:'step6', step:null,
       user:'この開発で得た知見を次のプロジェクトに引き継ぐには？',
       think:null,
@@ -2225,7 +2565,7 @@ function startRealDemo() {
   let cursor = 0;
   function runNext() {
     if(cursor >= steps.length) {
-      addMsg('done','✅ **Real AI 分析 全Step完了**\n\n使用データ: RSLT01-13 / CMT01-06 / DC01-05 / R01-08 / V01-05\n判断トレース: D001-D005（すべて根拠付き）\nDRBFM: DR-001〜003 / 知見カード: KN01〜KN04\n\n質問があればどうぞ。');
+      addMsg('done','✅ **Real AI 分析 全Step完了**\n\n使用データ: RSLT01-13 / CMT01-06 / DC01-05 / R01-08 / V01-05\n判断トレース: D001-D005（すべて根拠付き）\n開発判断記録: 判断記録-001〜003 / 知見カード: KN01〜KN04\n\n質問があればどうぞ。');
       btn.className='demo-btn done'; btn.textContent='↺ リセット'; btn.onclick=resetDemo; demoRunning=false;
       return;
     }
@@ -2256,9 +2596,9 @@ const qa = [
   { re:/ブッシュ|DC02/, nav:'trace', hl:'viz-risk', text:'DC02リアブッシュ高剛性化の影響（判断D004）:\n\n**RSLT10**: 後席NL +0.8dB悪化（新旧比較）\n**RSLT11**: 低周波こもり +1.5dB悪化（新旧比較）\n\n確からしさ: **Medium**（仕様比較で悪化確認済み、伝達経路は未特定）\n\n⚠️ 注意: 操安向上（DC02の変更理由）とのトレードオフがあるため、一律戻しは不可。\nTPA実施後に操安チームと最適剛性を再協議する必要があります。' },
   { re:/こもり|ISS01|低周波/, nav:'evidence', hl:'viz-iss01', text:'後席低周波こもり（ISS01）の詳細:\n\n**測定**: RSLT03 → 56.0dB(A)（45Hz付近、目標比+4.0dB、最大乖離）\n**官能**: CMT02 → 「頭に響く圧迫感、長距離で疲れそう」\n**一致度**: 完全一致 → 官能一致スコア=5（最大）\n\n**原因仮説**: DC01タイヤ+DC02ブッシュ+DC03サブフレームの複合寄与（TPA未実施で経路未特定）\n\n→ Evidence Map画面で一本線のつながりを確認できます。' },
   { re:/ギヤ|ギア|ISS03|DC05|モーター音/, nav:'step5', hl:'viz-ranking',text:'ギヤ音3次成分（ISS03）: **78pt HIGH**\n\n**RSLT08**: 官能「気になる」25%（目標0%超過）\n**CMT05**: 「ヒューンとした音がスッと出てくる」\n\n⚠️ 重要: **ロードNLが改善されると、このギヤ音が相対的にさらに目立つリスクがあります。**\n今の段階から対策を開始しないと、ロードNL対策後に新たな問題になる可能性があります。\n\n次アクション: 次数分析で3次成分特定 → DC05新型モーターの電磁力解析' },
-  { re:/次|追加検証|アクション|what next/, nav:'step6', hl:'viz-drbfm',text:'今後の優先アクション:\n\n1️⃣ **TPA実施**（伝達経路解析）\n   → こもり音の経路別寄与を特定\n\n2️⃣ **タイヤ再選定検討**\n   → 低転がり要求を満たす代替銘柄を探索\n   → 燃費チームとの調整が必要\n\n3️⃣ **次数分析（ギヤ音）**\n   → 3次成分の特定とDC05モーターとの因果確認\n\n4️⃣ **ブッシュ剛性最適化**\n   → TPA結果待ち → 操安チームと再協議\n\n→ 判断メモ・DRBFM画面で詳細を確認できます。' },
+  { re:/次|追加検証|アクション|what next/, nav:'step6', hl:'viz-drbfm',text:'今後の優先アクション:\n\n1️⃣ **TPA実施**（伝達経路解析）\n   → こもり音の経路別寄与を特定\n\n2️⃣ **タイヤ再選定検討**\n   → 低転がり要求を満たす代替銘柄を探索\n   → 燃費チームとの調整が必要\n\n3️⃣ **次数分析（ギヤ音）**\n   → 3次成分の特定とDC05モーターとの因果確認\n\n4️⃣ **ブッシュ剛性最適化**\n   → TPA結果待ち → 操安チームと再協議\n\n→ 判断メモ・開発判断記録画面で詳細を確認できます。' },
   { re:/トレース|根拠|evidence/, nav:'trace', text:'判断トレース（decision_trace.csv）について:\n\nこのワークベンチでは、各判断に対して以下を記録します:\n\n・使用した入力ファイル\n・使用した具体データID（RSLT03, CMT02 など）\n・使用した判断軸（6軸スコアリング）\n・紐づく商品性・シーン・NV要求\n・根拠（具体的な数値・コメント）\n・確からしさ（High/Medium/Low）\n・次に必要な確認\n\n→ 判断トレース画面で各判断（D001〜D005）を確認できます。' },
-  { re:/DRBFM|DR項目|ドライブ/, nav:'step6', hl:'viz-drbfm',text:'DRBFMアイテム（3件）:\n\n📋 **DR-001**: DC01タイヤ低転がり化\n   → 前後席NL悪化リスク（+2.1dB確認）\n   → 確からしさ: High\n\n📋 **DR-002**: DC02ブッシュ高剛性化\n   → こもり悪化リスク（+1.5dB確認）\n   → 確からしさ: Medium\n\n📋 **DR-003**: DC05新型モーター採用\n   → ギヤ音顕在化リスク（官能25%確認）\n   → 確からしさ: Medium\n\n→ 判断メモ・DRBFM画面で全詳細を確認できます。' },
+  { re:/判断記録|開発判断|方針判断/, nav:'step6', hl:'viz-drbfm',text:'開発判断記録（3件）:\n\n📋 **判断記録-001**: DC01タイヤ低転がり化\n   → 前後席NL悪化リスク（+2.1dB確認）\n   → 確からしさ: High\n\n📋 **判断記録-002**: DC02ブッシュ高剛性化\n   → こもり悪化リスク（+1.5dB確認）\n   → 確からしさ: Medium\n\n📋 **判断記録-003**: DC05新型モーター採用\n   → ギヤ音顕在化リスク（官能25%確認）\n   → 確からしさ: Medium\n\n→ 判断メモ・開発判断記録画面で全詳細を確認できます。' },
   { re:/知見|KN|ナレッジ/, nav:'step6', hl:'viz-knowledge',text:'知見カード（KN01〜KN04）:\n\n🎓 **KN01**: 低転がりタイヤはNLを2〜3dB悪化させる傾向。選定段階で仕様比較を必ず実施。（High確度）\n\n🎓 **KN02**: 操安目的のブッシュ高剛性化は低周波こもりを悪化させる。TPA予測を先行実施。（Medium確度）\n\n🎓 **KN03**: EV/HEVではロードNL改善後にギヤ音・モーター音が浮く。電動系音の管理値を同時に設定。（High確度）\n\n🎓 **KN04**: 遮音材-100g/m²でNLが0.5〜1.0dB悪化。軽量化と同等の源流・経路対策を確保。（Medium確度）' },
   { re:/商品性|価値|V0/, nav:'step2', hl:'viz-values',text:'主力商品性価値（scenario_001）:\n\n🥇 **V01** 後席でも会話しやすい（最優先）\n   → 高速・粗粒路で普通の声量で会話できる\n   → ISS02後席NLが未達 ⚠️\n\n🥈 **V02** 長距離でも疲れにくい\n   → ISS01こもり音が未達 ⚠️\n\n🥉 **V03** 荒れた路面でも上質に感じる\n   → ISS01こもり + ISS05ハーシュネスが未達 ⚠️\n\n→ 市場・商品性画面で全詳細を確認できます。' },
 ];
@@ -2332,7 +2672,7 @@ function switchScenario(n, btn) {
 }
 
 // initial message
-addMsg('ai', '新型EV/HEV Crossoverの開発、一緒に進めましょう。\n\n今日のゴールは**「この車は何で勝負するか」**を明確にすること。競合4社のNVデータを並べてみると、自社の強みと弱みがすぐわかります。\n\n**7つのステップで進めます（V字開発サイクル）：**\n0. 🌐 全体商品性を読む\n1. 📡 NV軸を特定する（今ここ）\n2. 🎯 NVコンセプトを決める\n3. 🔬 設計変更リスクを予測する\n4. 📊 予測と実測を照合する\n5. 🏆 NV全体の成立性を確認する\n6. 📝 商品性全体への成立性を確認してDRへ\n\n各Stepで判断ポイントがあり、そこで会話できます。まず Step 1 のベンチマーク分析から始めましょう。');
+addMsg('ai', '新型EV/HEV Crossoverの開発、一緒に進めましょう。\n\n今日のゴールは**「この車は何で勝負するか」**を明確にすること。競合4社のNVデータを並べてみると、自社の強みと弱みがすぐわかります。\n\n**7つのステップで進めます：**\n0. 🌐 市場・商品性分析\n1. 📡 NV性能ベンチマーク（今ここ）\n2. 🎯 目標設定・コンセプト決定\n3. 🔬 アーキテクチャー設計・計画立案\n4. 📊 評価・検証\n5. 🏆 成立性確認\n6. 📝 方針判断・引き継ぎ\n\n各Stepで判断ポイントがあり、そこで会話できます。まず Step 1 のベンチマーク分析から始めましょう。');
 // hdr-top flex fix
 document.querySelector('.hdr').style.display='flex';
 
